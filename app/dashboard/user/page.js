@@ -97,7 +97,7 @@ export default function DashboardPage() {
             </div>
           </div>
           <Button>
-            <GraduationCapIcon className="mr-2 h-4 w-4" /> Browse Courses
+          <Link href="/courses"> Browse Courses </Link>
           </Button>
         </div>
 

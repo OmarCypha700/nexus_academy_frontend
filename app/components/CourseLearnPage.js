@@ -680,7 +680,7 @@ export default function CourseLearnPage({ courseId }) {
               </Card>
 
               {/* Notes section */}
-              {currentLesson && (
+              {/* {currentLesson && (
                 <Card className="mb-4 md:mb-6 shadow-sm">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-lg">Your Notes</CardTitle>
@@ -703,10 +703,10 @@ export default function CourseLearnPage({ courseId }) {
                     </div>
                   </CardContent>
                 </Card>
-              )}
+              )} */}
 
               {/* Discussion section */}
-              {currentLesson && (
+              {/* {currentLesson && (
                 <Card className="shadow-sm">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-lg">Discussion</CardTitle>
@@ -721,7 +721,7 @@ export default function CourseLearnPage({ courseId }) {
                     />
                   </CardContent>
                 </Card>
-              )}
+              )} */}
             </div>
           </div>
         ) : (

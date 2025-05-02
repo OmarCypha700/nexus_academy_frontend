@@ -1,6 +1,5 @@
 // app/components/course/CourseSidebar.js
-import { useState } from "react";
-import { BookMarked, CheckCircle, BarChart, PlayCircle, FileText, BookOpen, AlignLeft, FileQuestion, FilePen, X } from "lucide-react";
+import { BookMarked, CheckCircle, PlayCircle, FileQuestion } from "lucide-react";
 import { Progress } from "@/app/components/ui/progress";
 import { Button } from "@/app/components/ui/button";
 import { Card, CardContent } from "@/app/components/ui/card";
@@ -16,22 +15,19 @@ export function CourseSidebar({
   progress,
   currentModule,
   currentLesson,
+  currentQuiz,
   completedLessons,
   navigateToLesson,
+  navigateToQuiz,
   totalLessons,
   completedCount,
-  isMobile,
   sidebarOpen,
   setSidebarOpen,
 }) {
-  const getLessonIcon = (type) => {
-    switch (type) {
-      case "video": return <PlayCircle className="h-4 w-4" />;
-      case "exercise": return <FileText className="h-4 w-4" />;
-      case "quiz": return <FileQuestion className="h-4 w-4" />;
-      case "text": return <AlignLeft className="h-4 w-4" />;
-      case "assignment": return <FilePen className="h-4 w-4" />;
-      default: return <BookOpen className="h-4 w-4" />;
+  // Handle sidebar close on mobile
+  const closeSidebar = () => {
+    if (setSidebarOpen) {
+      setSidebarOpen(false);
     }
   };
 
@@ -41,7 +37,7 @@ export function CourseSidebar({
       {sidebarOpen && (
         <div 
           className="fixed inset-0 bg-black/20 z-30 md:hidden" 
-          onClick={() => setSidebarOpen(false)}
+          onClick={closeSidebar}
           aria-hidden="true"
         />
       )}
@@ -66,10 +62,13 @@ export function CourseSidebar({
             variant="ghost" 
             size="icon" 
             className="md:hidden" 
-            onClick={() => setSidebarOpen(false)}
+            onClick={closeSidebar}
             aria-label="Close sidebar"
           >
-            <X className="h-4 w-4" />
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+              <path d="M18 6 6 18"></path>
+              <path d="m6 6 12 12"></path>
+            </svg>
           </Button>
         </div>
 
@@ -105,16 +104,20 @@ export function CourseSidebar({
                     <div className="space-y-1 pl-2 sm:pl-4">
                       {module.lessons.map((lesson) => (
                         <div key={lesson.id} className="space-y-1">
+                          {/* Video Lesson Button */}
                           <Button
-                            variant={currentLesson?.id === lesson.id ? "secondary" : "ghost"}
+                            variant={currentLesson?.id === lesson.id && !currentQuiz ? "secondary" : "ghost"}
                             className={`w-full justify-start text-xs sm:text-sm pl-2 ${completedLessons.includes(lesson.id) ? "text-gray-500" : ""}`}
-                            onClick={() => navigateToLesson(module.id, lesson.id)}
+                            onClick={() => {
+                              navigateToLesson(module.id, lesson.id);
+                              closeSidebar();
+                            }}
                           >
                             <div className="flex items-center w-full">
                               {completedLessons.includes(lesson.id) ? (
                                 <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 text-green-500 flex-shrink-0" />
                               ) : (
-                                <span className="flex-shrink-0 mr-1.5 sm:mr-2">{getLessonIcon(lesson.type)}</span>
+                                <PlayCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 flex-shrink-0" />
                               )}
                               <span className="truncate text-left">{lesson.title}</span>
                               {lesson.duration && (
@@ -124,30 +127,26 @@ export function CourseSidebar({
                               )}
                             </div>
                           </Button>
-                          {/* Display quizzes and assignments under each lesson */}
+                          
+                          {/* Associated Quiz Button (if the lesson has a quiz) */}
                           {lesson.quizzes?.map((quiz) => (
                             <Button
                               key={quiz.id}
-                              variant="ghost"
+                              variant={currentQuiz?.id === quiz.id ? "secondary" : "ghost"}
                               className="w-full justify-start text-xs sm:text-sm pl-6 text-gray-600"
-                              onClick={() => navigateToLesson(module.id, lesson.id, quiz.id)}
+                              onClick={() => {
+                                navigateToQuiz(module.id, lesson.id, quiz.id);
+                                closeSidebar();
+                              }}
                             >
-                              <FileQuestion className="h-3 w-3 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
-                              <span className="truncate">{quiz.title}</span>
-                            </Button>
-                          ))}
-                          {lesson.assignments?.map((assignment) => (
-                            <Button
-                              key={assignment.id}
-                              variant="ghost"
-                              className="w-full justify-start text-xs sm:text-sm pl-6 text-gray-600"
-                              onClick={() => navigateToLesson(module.id, lesson.id, null, assignment.id)}
-                            >
-                              <FilePen className="h-3 w-3 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
-                              <span className="truncate">{assignment.title}</span>
-                              {assignment.submitted && (
-                                <span className="ml-auto text-xs text-green-500">✓</span>
-                              )}
+                              <div className="flex items-center w-full">
+                                {completedLessons.includes(`quiz-${quiz.id}`) ? (
+                                  <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 text-green-500 flex-shrink-0" />
+                                ) : (
+                                  <FileQuestion className="h-3 w-3 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 flex-shrink-0" />
+                                )}
+                                <span className="truncate">Quiz: {quiz.title}</span>
+                              </div>
                             </Button>
                           ))}
                         </div>
@@ -164,7 +163,11 @@ export function CourseSidebar({
           <Card className="bg-gray-50">
             <CardContent className="p-3">
               <div className="flex items-center">
-                <BarChart className="h-4 w-4 text-primary mr-2" />
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 text-primary mr-2">
+                  <path d="M3 3v18h18"></path>
+                  <path d="m3 11 8-8 4 4 6-6"></path>
+                  <path d="m14 10 3-3 4 4"></path>
+                </svg>
                 <div>
                   <p className="text-xs sm:text-sm font-medium">Your Stats</p>
                   <p className="text-xs text-gray-500">
