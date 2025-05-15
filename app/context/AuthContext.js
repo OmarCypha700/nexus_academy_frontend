@@ -1,37 +1,4 @@
-// "use client";
-
-// import { createContext, useContext, useEffect, useState } from "react";
-
-// const AuthContext = createContext();
-
-// export function AuthProvider({ children }) {
-//   const [token, setToken] = useState(null);
-
-//   useEffect(() => {
-//     const storedToken = localStorage.getItem("accessToken");
-//     if (storedToken) {
-//       setToken(storedToken);
-//     }
-//   }, []);
-
-//   const login = (newToken) => {
-//     localStorage.setItem("accessToken", newToken);
-//     setToken(newToken);
-//   };
-
-//   const logout = () => {
-//     localStorage.removeItem("accessToken");
-//     setToken(null);
-//   };
-
-//   return (
-//     <AuthContext.Provider value={{ token, login, logout }}>
-//       {children}
-//     </AuthContext.Provider>
-//   );
-// }
-
-// export const useAuth = () => useContext(AuthContext);
+// @/app/context/AuthContext.js
 
 "use client";
 

@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import axios from "@/app/lib/axios"
+
 import Link from "next/link";
 import { CalendarIcon, BookOpenIcon, GraduationCapIcon, ClipboardListIcon } from "lucide-react";
-
 // Import shadcn UI components
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/app/components/ui/card";
 import { Progress } from "@/app/components/ui/progress";
@@ -13,57 +15,56 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/app/components/ui/ta
 import { Avatar, AvatarFallback, AvatarImage } from "@/app/components/ui/avatar";
 import { Skeleton } from "@/app/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/app/components/ui/alert";
+import { useAuth } from "@/app/context/AuthContext";
 
 export default function DashboardPage() {
-  const [user, setUser] = useState(null);
+  // const [user, setUser] = useState(null);
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
+  const router = useRouter();
+  const {user} = useAuth();
+ 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    const token = localStorage.getItem("accessToken");
+  const storedUser = localStorage.getItem("user");
+  const token = localStorage.getItem("accessToken");
 
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
+  if (storedUser) {
+    setUser(JSON.parse(storedUser));
+  }
 
-    if (token) {
-      fetch("http://localhost:8000/api/user-dashboard/", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-        .then((res) => {
-          if (!res.ok) {
-            throw new Error("Failed to fetch dashboard data");
-          }
-          return res.json();
-        })
-        .then((data) => {
-          setDashboardData(data);
-        })
-        .catch((err) => {
-          console.error("Dashboard error:", err);
-          setError("Unable to load dashboard data. Please try again later.");
-        })
-        .finally(() => setLoading(false));
-    } else {
-      setError("Authentication token not found. Please login again.");
+  if (!token) {
+    // Redirect to login with error message
+    router.push(`/login?error=${encodeURIComponent("You must be logged in to access the dashboard.")}`);
+    return;
+  }
+
+  const fetchDashboard = async () => {
+    try {
+      const res = await axios.get("/user-dashboard/");
+      setDashboardData(res.data);
+    } catch (err) {
+      console.error("Dashboard error:", err);
+      setError("Unable to load dashboard data. Please try again later.");
+    } finally {
       setLoading(false);
     }
-  }, []);
+  };
+
+  fetchDashboard();
+}, []);
 
   // Get initials for avatar fallback
-  const getInitials = (name) => {
-    if (!name) return "U";
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .substring(0, 2);
-  };
+  // const getInitials = (name) => {
+  //   if (!name) return "U";
+  //   return name
+  //     .split(" ")
+  //     .map((n) => n[0])
+  //     .join("")
+  //     .toUpperCase()
+  //     .substring(0, 2);
+  // };
+  const initials = (user?.last_name?.[0] || "") + (user?.first_name?.[0] || "")
 
   // Format date in a more readable way
   const formatDate = (dateString) => {
@@ -86,12 +87,12 @@ export default function DashboardPage() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
           <div className="flex items-center gap-4 mb-4 md:mb-0">
             <Avatar className="h-12 w-12">
-              <AvatarImage src={user?.avatar} alt={user?.name || "User"} />
-              <AvatarFallback>{user ? getInitials(user.name || user.username) : "U"}</AvatarFallback>
+              <AvatarImage src={user?.avatar} alt={user?.username || "User"} />
+              <AvatarFallback className="bg-black text-white">{initials || "U"}</AvatarFallback>
             </Avatar>
             <div>
               <h1 className="text-3xl font-bold text-gray-800">
-                Welcome back{user ? `, ${user.name || user.username}` : ""}
+                Welcome back, {user?.last_name} {user?.first_name}
               </h1>
               <p className="text-gray-600">Let's continue your learning journey</p>
             </div>

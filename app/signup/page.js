@@ -2,75 +2,109 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import axios from "axios";
+import axiosInstance from "@/app/lib/axios";
 import { Input } from "@/app/components/ui/input";
 import { Button } from "@/app/components/ui/button";
+import Link from "next/link";
 
 export default function SignupPage() {
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [formData, setFormData] = useState({
+    username: "",
+    email: "",
+    password: "",
+  });
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
+
+  const handleChange = (e) => {
+    setFormData((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
+    setLoading(true);
 
     try {
-      await axios.post("http://localhost:8000/api/auth/register/", {
-        username,
-        email,
-        password,
-      });
-      router.push("/login");
+      const response = await axiosInstance.post("/auth/register/", formData);
+      if (response.status === 201 || response.status === 200) {
+        router.push("/login");
+      }
     } catch (err) {
-      setError("Failed to create account");
+      setError(
+        err.response?.data?.detail ||
+          "Failed to create account. Please try again."
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="flex min-h-screen">
-      {/* Image Section (only on desktop) */}
-      <div className="hidden md:flex md:w-1/2 bg-cover bg-center bg-[url('/signup-bg.jpg')]"></div>
+    <div className="flex flex-col md:flex-row min-h-screen">
+      {/* Left Image - visible only on md and above */}
+      <div className="hidden md:flex md:w-1/2 items-center justify-center bg-blue-100">
+         <img
+          src="/next.svg" // Replace with your actual image path
+          alt="Signin illustration"
+          className="max-w-md"
+        />
+        
+      </div>
 
       {/* Form Section */}
-      <div className="flex flex-col justify-center items-center w-full md:w-1/2 bg-gray-100 px-4 py-10">
-        <form
-          onSubmit={handleSubmit}
-          className="w-full max-w-md bg-white p-8 rounded-lg shadow-md"
-        >
-          <h2 className="text-2xl font-bold mb-4 text-gray-900">Sign Up</h2>
-          {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
+      <div className="flex flex-1 justify-center items-center px-6 py-12 bg-gray-100">
+        <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-xl">
+          <h2 className="text-3xl font-bold text-gray-900 mb-6 text-center">
+            Create Your Account
+          </h2>
 
-          <Input
-            type="text"
-            placeholder="Username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-            className="mb-3"
-          />
-          <Input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            className="mb-3"
-          />
-          <Input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            className="mb-4"
-          />
-          <Button type="submit" className="w-full">
-            Sign Up
-          </Button>
-        </form>
+          {error && (
+            <p className="text-red-500 text-sm mb-4 text-center">{error}</p>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <Input
+              name="username"
+              type="text"
+              placeholder="Username"
+              value={formData.username}
+              onChange={handleChange}
+              required
+            />
+            <Input
+              name="email"
+              type="email"
+              placeholder="Email"
+              value={formData.email}
+              onChange={handleChange}
+              required
+            />
+            <Input
+              name="password"
+              type="password"
+              placeholder="Password"
+              value={formData.password}
+              onChange={handleChange}
+              required
+            />
+
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? "Signing Up..." : "Sign Up"}
+            </Button>
+          </form>
+
+          <p className="mt-4 text-center text-sm text-gray-600">
+            Already have an account?{" "}
+            <Link href="/login" className="text-blue-600 hover:underline">
+              Log in
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );

@@ -105,37 +105,43 @@ export default function CourseDetailPage() {
     return `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
   };
 
-  const handleEnroll = async () => {
-    if (!user) {
-      router.push('/login?redirect=' + encodeURIComponent(`/courses/${id}`));
-      return;
+const handleEnroll = async () => {
+  if (!user) {
+    router.push('/login?redirect=' + encodeURIComponent(`/courses/${id}`));
+    return;
+  }
+
+  // If already enrolled, just redirect to the learn page
+  if (isEnrolled) {
+    router.push(`/learn/${id}`);
+    return;
+  }
+
+  setEnrolling(true);
+  try {
+    const res = await apiRequest(`api/enroll/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ course_id: id }),
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.detail || 'Failed to enroll in course');
     }
-  
-    setEnrolling(true);
-    try {
-      const res = await apiRequest(`api/enroll/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json' // Make sure this header is set
-        },
-        body: JSON.stringify({ course_id: id }),
-      });
-  
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.detail || 'Failed to enroll in course');
-      }
-  
-      setIsEnrolled(true);
-      // Redirect to course content or learning page
-      router.push(`/learn/${id}`);
-    } catch (err) {
-      console.error('Enrollment error:', err);
-      setError(err.message);
-    } finally {
-      setEnrolling(false);
-    }
-  };
+
+    setIsEnrolled(true);
+    // Redirect to course content or learning page after enrollment
+    router.push(`/learn/${id}`);
+  } catch (err) {
+    console.error('Enrollment error:', err);
+    setError(err.message);
+  } finally {
+    setEnrolling(false);
+  }
+};
 
   // Skeleton loading state
   if (loading) {
@@ -208,15 +214,6 @@ export default function CourseDetailPage() {
     );
   }
 
-  // Mock data - would come from API in real application
-  const courseModules = [
-    { id: 1, title: "Introduction to the Course", duration: "15 min" },
-    { id: 2, title: "Core Concepts Explained", duration: "45 min" },
-    { id: 3, title: "Practical Applications", duration: "60 min" },
-    { id: 4, title: "Advanced Techniques", duration: "90 min" },
-    { id: 5, title: "Final Project and Conclusion", duration: "30 min" },
-  ];
-
   const formatCourseLength = (minutes) => {
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
@@ -274,7 +271,7 @@ export default function CourseDetailPage() {
                 </div>
                 <div className="flex items-center">
                   <BookOpen className="mr-2 h-4 w-4" />
-                  <span>{courseModules.length} modules</span>
+                  <span>{course.modules.length} modules</span>
                 </div>
                 <div className="flex items-center">
                   <Star className="mr-2 h-4 w-4" />
@@ -341,39 +338,8 @@ export default function CourseDetailPage() {
                 </div>
               </TabsContent>
 
-              {/* Curriculum Tab - Mock Data*/}
-              <TabsContent value="curriculum" className="space-y-4">
-                <h2 className="text-2xl font-bold mb-4">Course Content</h2>
-                <div className="space-y-3">
-                  {courseModules.map((module, index) => (
-                    <Card key={module.id} className="overflow-hidden">
-                      <CardHeader className="p-4 pb-2 bg-gray-50">
-                        <div className="flex justify-between items-center">
-                          <CardTitle className="text-lg">
-                            Module {index + 1}: {module.title}
-                          </CardTitle>
-                          <Badge variant="outline" className="ml-2">
-                            {module.duration}
-                          </Badge>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="p-4 pt-2">
-                        <div className="flex items-center text-sm text-gray-500">
-                          <PlayCircle className="h-4 w-4 mr-2" />
-                          <span>
-                            {isEnrolled
-                              ? "Available"
-                              : "Preview available after enrollment"}
-                          </span>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </TabsContent>
-
               {/* Curriculum Tab - From API*/}
-              {/* <TabsContent value="curriculum" className="space-y-4">
+              <TabsContent value="curriculum" className="space-y-4">
                 <h2 className="text-2xl font-bold mb-4">Course Content</h2>
                 <div className="space-y-3">
                   {course.modules?.map((module, index) => (
@@ -405,7 +371,7 @@ export default function CourseDetailPage() {
                     </Card>
                   ))}
                 </div>
-              </TabsContent> */}
+              </TabsContent>
 
               {/* Instructor Tab */}
               <TabsContent value="instructor" className="space-y-4">
@@ -485,7 +451,7 @@ export default function CourseDetailPage() {
                   <li className="flex items-center">
                     <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
                     <span>
-                      {courseModules.length} modules with detailed lessons
+                      {course.modules.length} modules with detailed lessons
                     </span>
                   </li>
                   <li className="flex items-center">
@@ -506,7 +472,7 @@ export default function CourseDetailPage() {
                   className="w-full"
                   size="lg"
                   onClick={handleEnroll}
-                  disabled={enrolling || isEnrolled}
+                  disabled={enrolling}
                 >
                   {enrolling
                     ? "Processing..."

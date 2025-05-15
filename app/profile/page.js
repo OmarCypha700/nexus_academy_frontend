@@ -62,7 +62,7 @@ export default function ProfilePage() {
     }
   }
 
-  const initials = (profile?.last_name?.[0] || "") + (profile?.first_name?.[0] || "")
+  const initials = (profile?.last_name?.[0] || "P") + (profile?.first_name?.[0] || "")
 
   return (
     <div className="max-w-2xl mx-auto mt-10 p-4">
@@ -90,7 +90,7 @@ export default function ProfilePage() {
             <>
               <div className="flex items-center space-x-4 mb-6">
                 <Avatar className="w-16 h-16">
-                  <AvatarFallback className="bg-blue-600 text-white text-xl font-bold">
+                  <AvatarFallback className="bg-black text-white text-xl font-bold">
                     {initials.toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
@@ -179,7 +179,7 @@ export default function ProfilePage() {
                 ) : (
                   <Button
                     onClick={() => setEditing(true)}
-                    className="mt-4 bg-blue-600 hover:bg-blue-700"
+                    className="mt-4 bg-black hover:bg-blue-700"
                   >
                     Edit Profile
                   </Button>

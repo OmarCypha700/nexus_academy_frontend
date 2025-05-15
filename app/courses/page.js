@@ -83,13 +83,13 @@ export default function CoursesPage() {
     
     // Apply price filter
     if (priceFilter === 'free') {
-      results = results.filter(course => course.price === 0.00);
+      results = results.filter(course => course.price == 0.00);
     } else if (priceFilter === 'paid') {
-      results = results.filter(course => course.price > 0);
+      results = results.filter(course => course.price > 0.00);
     } else if (priceFilter === 'under50') {
-      results = results.filter(course => course.price > 0 && course.price <= 50);
+      results = results.filter(course => course.price > 0.00 && course.price <= 50.00);
     } else if (priceFilter === 'over50') {
-      results = results.filter(course => course.price > 50);
+      results = results.filter(course => course.price > 50.00);
     }
     
     setFilteredCourses(results);
