@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import axios from "@/app/lib/axios"
-
 import Link from "next/link";
+
 import { CalendarIcon, BookOpenIcon, GraduationCapIcon, ClipboardListIcon } from "lucide-react";
 // Import shadcn UI components
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/app/components/ui/card";
@@ -54,16 +54,6 @@ export default function DashboardPage() {
   fetchDashboard();
 }, []);
 
-  // Get initials for avatar fallback
-  // const getInitials = (name) => {
-  //   if (!name) return "U";
-  //   return name
-  //     .split(" ")
-  //     .map((n) => n[0])
-  //     .join("")
-  //     .toUpperCase()
-  //     .substring(0, 2);
-  // };
   const initials = (user?.last_name?.[0] || "") + (user?.first_name?.[0] || "")
 
   // Format date in a more readable way

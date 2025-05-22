@@ -1,69 +1,75 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import axiosInstance from "@/app/lib/axios";
-import { Pencil, BookOpen, FileText, Video, Trash2, Plus } from "lucide-react";
-
-// Import shadcn components
+import { Plus } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
   CardTitle,
+  CardDescription,
 } from "@/app/components/ui/card";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogTrigger,
 } from "@/app/components/ui/dialog";
-import { Input } from "@/app/components/ui/input";
-import { Label } from "@/app/components/ui/label";
-import { Textarea } from "@/app/components/ui/textarea";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/app/components/ui/tabs";
-import { Badge } from "@/app/components/ui/badge";
-import { Separator } from "@/app/components/ui/separator";
 import { Alert, AlertDescription } from "@/app/components/ui/alert";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/app/components/ui/accordion";
+
+// Custom components
+import CourseCard from "@/app/components/dashboard/course/CourseCard";
+import CourseForm from "@/app/components/dashboard/course/CourseForm";
+import CourseDetails from "@/app/components/dashboard/course/CourseDetails";
+import LessonForm from "@/app/components/dashboard/lesson/LessonForm";
+import ModuleRenameDialog from "@/app/components/dashboard/module/ModuleRenameDialog";
+import ModuleForm from "@/app/components/dashboard/module/ModuleForm";
 
 export default function InstructorDashboard() {
   const [courses, setCourses] = useState([]);
+  const [selectedCourse, setSelectedCourse] = useState(null);
+  const [currentLesson, setCurrentLesson] = useState(null);
+
+  // Dialog & Form State
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isAddLessonOpen, setIsAddLessonOpen] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+
+  // Feedback
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [price, setPrice] = useState("");
-  const [introVideoId, setIntroVideoId] = useState("");
+  // Module State
+  const [renameModalOpen, setRenameModalOpen] = useState(false);
+  const [moduleToRename, setModuleToRename] = useState(null);
+  const [selectedModule, setSelectedModule] = useState(null);
+  const [addModuleOpen, setAddModuleOpen] = useState(false);
 
-  const [selectedCourse, setSelectedCourse] = useState(null);
-  const [editMode, setEditMode] = useState(false);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [detailsOpen, setDetailsOpen] = useState(false);
-
-  // For handling editing of a lesson
-  const [isEditOpen, setIsEditOpen] = useState(false);
-  const [currentLesson, setCurrentLesson] = useState(null);
-  const [formData, setFormData] = useState({ title: "", description: "" });
-
+  // Fetch courses
   useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    const token = localStorage.getItem("accessToken");
+
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+
+    if (!token) {
+      // Redirect to login with error message
+      router.push(
+        `/login?error=${encodeURIComponent(
+          "You must be logged in to access the dashboard."
+        )}`
+      );
+      return;
+    }
+
     fetchCourses();
   }, []);
 
@@ -74,104 +80,57 @@ export default function InstructorDashboard() {
       setCourses(response.data);
       setError(null);
     } catch (err) {
-      console.error("Failed to fetch courses:", err);
-      setError("Could not load courses");
+      setError("Failed to load courses");
+      console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleEditLesson = (lesson) => {
-    setCurrentLesson(lesson); // Set the current lesson for editing
-    setFormData({
-      title: lesson.title || "",
-      description: lesson.description || "",
-    });
-    setIsEditOpen(true);  // Open the modal
-  };
-  
-  const handleUpdateLesson = async () => {
-    try {
-      const res = await axiosInstance.put(`/lessons/${currentLesson.id}/`, formData);
-  
-      if (res.status === 200) {
-        // Optionally update other state or refresh data
-        setIsEditOpen(false);  // Close modal after successful update
-      } else {
-        console.error("Update failed with status:", res.status);
-      }
-    } catch (error) {
-      console.error("Error updating lesson:", error);
-    }
-  };
-  
   const resetForm = () => {
-    setTitle("");
-    setDescription("");
-    setPrice("");
-    setIntroVideoId("");
-    setError(null);
-    setSuccess(null);
     setEditMode(false);
     setSelectedCourse(null);
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
     setError(null);
     setSuccess(null);
+  };
 
-    const courseData = {
-      title,
-      description,
-      price,
-      intro_video_id: introVideoId,
-    };
-
+  // Course Handlers
+  const handleCourseFormSubmit = async (courseData) => {
     try {
       if (editMode && selectedCourse) {
-        // Update existing course
-        const response = await axiosInstance.put(
+        const res = await axiosInstance.put(
           `/courses/${selectedCourse.id}/`,
           courseData
         );
         setCourses(
-          courses.map((c) => (c.id === selectedCourse.id ? response.data : c))
+          courses.map((c) => (c.id === selectedCourse.id ? res.data : c))
         );
         setSuccess("Course updated successfully!");
       } else {
-        // Create new course
-        const response = await axiosInstance.post("/courses/", courseData);
-        setCourses((prev) => [...prev, response.data]);
+        const res = await axiosInstance.post("/courses/", courseData);
+        setCourses((prev) => [...prev, res.data]);
         setSuccess("Course created successfully!");
       }
       resetForm();
       setDialogOpen(false);
     } catch (err) {
-      console.error(`Failed to ${editMode ? "update" : "create"} course:`, err);
       setError(`Failed to ${editMode ? "update" : "create"} course`);
     }
   };
 
   const handleEditCourse = (course) => {
-    setTitle(course.title);
-    setDescription(course.description);
-    setPrice(course.price);
-    setIntroVideoId(course.intro_video_id || "");
     setSelectedCourse(course);
     setEditMode(true);
     setDialogOpen(true);
   };
 
   const handleDeleteCourse = async (courseId) => {
-    if (!window.confirm("Are you sure you want to delete this course?")) return;
-
+    if (!confirm("Delete this course?")) return;
     try {
       await axiosInstance.delete(`/courses/${courseId}/`);
       setCourses(courses.filter((c) => c.id !== courseId));
       setSuccess("Course deleted successfully!");
     } catch (err) {
-      console.error("Failed to delete course:", err);
       setError("Failed to delete course");
     }
   };
@@ -181,335 +140,197 @@ export default function InstructorDashboard() {
     setDetailsOpen(true);
   };
 
-  const CourseForm = () => (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      {error && (
-        <Alert variant="destructive">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-      {success && (
-        <Alert variant="success">
-          <AlertDescription>{success}</AlertDescription>
-        </Alert>
-      )}
-      <div className="space-y-2">
-        <Label htmlFor="title">Course Title</Label>
-        <Input
-          id="title"
-          placeholder="Enter course title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          required
-        />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="description">Description</Label>
-        <Textarea
-          id="description"
-          placeholder="Enter course description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          className="min-h-32"
-          required
-        />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="price">Price ($)</Label>
-        <Input
-          id="price"
-          type="number"
-          placeholder="0.00"
-          value={price}
-          onChange={(e) => setPrice(e.target.value)}
-          required
-        />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="introVideoId">Intro Video ID (Optional)</Label>
-        <Input
-          id="introVideoId"
-          placeholder="Enter YouTube video ID"
-          value={introVideoId}
-          onChange={(e) => setIntroVideoId(e.target.value)}
-        />
-      </div>
-      <DialogFooter>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => {
-            resetForm();
-            setDialogOpen(false);
-          }}
-        >
-          Cancel
-        </Button>
-        <Button type="submit">
-          {editMode ? "Update Course" : "Create Course"}
-        </Button>
-      </DialogFooter>
-    </form>
-  );
+  // Lesson Handlers
+  const handleEditLesson = (lesson) => {
+    setCurrentLesson(lesson);
+    setIsEditOpen(true);
+  };
 
-  const CourseCard = ({ course }) => (
-    <Card>
-      <CardHeader className="pb-2">
-        <div className="flex justify-between items-center">
-          <CardTitle className="text-lg">{course.title}</CardTitle>
-          <div className="flex gap-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => openCourseDetails(course)}
-              title="Course Details"
-            >
-              <BookOpen size={16} />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => handleEditCourse(course)}
-              title="Edit Course"
-            >
-              <Pencil size={16} />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => handleDeleteCourse(course.id)}
-              className="text-red-500 hover:text-red-600 hover:bg-red-50"
-              title="Delete Course"
-            >
-              <Trash2 size={16} />
-            </Button>
-          </div>
-        </div>
-        <CardDescription className="line-clamp-2">
-          {course.description}
-        </CardDescription>
-      </CardHeader>
-      <CardFooter className="pt-2 flex justify-between">
-        <Badge variant="outline">${course.price}</Badge>
-        <span className="text-xs text-muted-foreground">
-          {course.lessons ? `${course.lessons.length} lessons` : "No lessons"}
-        </span>
-      </CardFooter>
-    </Card>
-  );
+  const handleUpdateLesson = async (formData) => {
+    try {
+      const updatedLesson = {
+        ...formData,
+        course: selectedCourse.id,
+      };
+      const res = await axiosInstance.put(
+        `/lessons/${currentLesson.id}/`,
+        updatedLesson
+      );
 
-  const CourseDetails = () => {
-    if (!selectedCourse) return null;
+      if (res.status === 200) {
+        const updated = res.data;
+        const updatedModules = selectedCourse.modules.map((mod) => ({
+          ...mod,
+          lessons: mod.lessons.map((l) => (l.id === updated.id ? updated : l)),
+        }));
 
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-bold">{selectedCourse.title}</h2>
-          </div>
-          <Button
-            variant="outline"
-            onClick={() => handleEditCourse(selectedCourse)}
-            className="gap-1"
-          >
-            <Pencil size={16} /> Edit Course
-          </Button>
-        </div>
+        setSelectedCourse((prev) => ({ ...prev, modules: updatedModules }));
+        setIsEditOpen(false);
+        setSuccess("Lesson updated successfully!");
+      }
+    } catch (err) {
+      setError("Failed to update lesson");
+    }
+  };
 
-        <div>
-          <h3 className="text-lg font-medium">Description</h3>
-          <p className="text-muted-foreground mt-1">
-            {selectedCourse.description}
-          </p>
-        </div>
+  const handleAddLesson = async (formData) => {
+    try {
+      const newLesson = {
+        ...formData,
+        course: selectedCourse.id,
+      };
+      const res = await axiosInstance.post("/lessons/", newLesson);
 
-        <div className="grid grid-cols-2 gap-4">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Price</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold">${selectedCourse.price}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Status</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Badge
-                variant={selectedCourse.is_published ? "success" : "secondary"}
-              >
-                {selectedCourse.is_published ? "Published" : "Draft"}
-              </Badge>
-            </CardContent>
-          </Card>
-        </div>
+      if (res.status === 201) {
+        const added = res.data;
+        const updatedModules = selectedCourse.modules.map((mod) =>
+          mod.id === parseInt(formData.module)
+            ? { ...mod, lessons: [...mod.lessons, added] }
+            : mod
+        );
 
-        <Separator />
+        setSelectedCourse((prev) => ({ ...prev, modules: updatedModules }));
+        setIsAddLessonOpen(false);
+        setSuccess("Lesson added successfully!");
+      }
+    } catch (err) {
+      setError("Failed to add lesson");
+    }
+  };
 
-        <Tabs defaultValue="lessons" className="w-full">
-          <TabsList className="grid grid-cols-3 mb-4">
-            <TabsTrigger value="lessons">Lessons</TabsTrigger>
-            <TabsTrigger value="assignments">Assignments</TabsTrigger>
-            <TabsTrigger value="quizzes">Quizzes</TabsTrigger>
-          </TabsList>
+  const handleDeleteLesson = async (lessonId) => {
+    if (!confirm("Delete this lesson?")) return;
+    try {
+      await axiosInstance.delete(`/lessons/${lessonId}/`);
+      const updatedModules = selectedCourse.modules.map((mod) => ({
+        ...mod,
+        lessons: mod.lessons.filter((l) => l.id !== lessonId),
+      }));
+      setSelectedCourse((prev) => ({ ...prev, modules: updatedModules }));
+      setSuccess("Lesson deleted successfully!");
+    } catch (err) {
+      setError("Failed to delete lesson");
+    }
+  };
 
-          <TabsContent value="lessons" className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-medium">Lessons</h3>
-              <Button variant="outline" size="sm" className="gap-1">
-                <Plus size={16} /> Add Lesson
-              </Button>
-            </div>
+  // Module Handlers
 
-            {selectedCourse.modules &&
-            selectedCourse.modules.some((mod) => mod.lessons.length > 0) ? (
-              <div className="space-y-2">
-                {selectedCourse.modules.flatMap((module, moduleIndex) =>
-                  module.lessons.map((lesson, lessonIndex) => (
-                    <Accordion
-                      key={lesson.id || `${moduleIndex}-${lessonIndex}`}
-                      type="single"
-                      collapsible
-                    >
-                      <AccordionItem
-                        value={`lesson-${moduleIndex}-${lessonIndex}`}
-                      >
-                        <AccordionTrigger className="hover:bg-accent hover:no-underline px-3 rounded-md">
-                          <div className="flex items-center gap-2">
-                            <span>{lesson.title}</span>
-                          </div>
-                        </AccordionTrigger>
-                        <AccordionContent className="px-3">
-                          <div className="space-y-2">
-                            <p className="text-sm text-muted-foreground">
-                              {lesson.description || "No description available"}
-                            </p>
-                            <div className="flex justify-end gap-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleEditLesson(lesson)}
-                              >
-                                <Pencil size={14} className="mr-1" /> Edit
-                              </Button>
-                              <Button variant="destructive" size="sm">
-                                <Trash2 size={14} className="mr-1" /> Delete
-                              </Button>
-                            </div>
-                          </div>
-                        </AccordionContent>
-                      </AccordionItem>
-                    </Accordion>
-                  ))
-                )}
-              </div>
-            ) : (
-              <Card>
-                <CardContent className="flex flex-col items-center justify-center py-8">
-                  <p className="text-muted-foreground mb-4">
-                    No lessons added yet
-                  </p>
-                  <Button>
-                    <Plus size={16} className="mr-1" /> Create First Lesson
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
+  // Open rename module modal
+  const handleOpenRenameModule = (module) => {
+    setModuleToRename(module);
+    setRenameModalOpen(true);
+  };
 
-          {/* Modal for editing lessons */}
-          <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Edit Lesson</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <Input
-                  placeholder="Lesson title"
-                  value={formData.title}
-                  onChange={(e) =>
-                    setFormData({ ...formData, title: e.target.value })
-                  }
-                />
-                <Textarea
-                  placeholder="Lesson description"
-                  value={formData.description}
-                  onChange={(e) =>
-                    setFormData({ ...formData, description: e.target.value })
-                  }
-                />
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsEditOpen(false)}>
-                  Cancel
-                </Button>
-                <Button onClick={handleUpdateLesson}>Update</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+  // Submit new module title
+  const handleRenameModule = async (newTitle) => {
+    try {
+      // optimistic UI update
+      setSelectedCourse((prev) => ({
+        ...prev,
+        modules: prev.modules.map((m) =>
+          m.id === moduleToRename.id ? { ...m, title: newTitle } : m
+        ),
+      }));
 
-          <TabsContent value="assignments" className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-medium">Assignments</h3>
-              <Button variant="outline" size="sm" className="gap-1">
-                <Plus size={16} /> Add Assignment
-              </Button>
-            </div>
+      await axiosInstance.patch(`/modules/${moduleToRename.id}/`, {
+        title: newTitle,
+      });
 
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-8">
-                <p className="text-muted-foreground mb-4">
-                  No assignments added yet
-                </p>
-                <Button>
-                  <Plus size={16} className="mr-1" /> Create First Assignment
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
+      setSuccess("Module renamed");
+    } catch (err) {
+      setError("Failed to rename module");
+      // rollback UI if needed
+      fetchCourses();
+    }
+  };
 
-          <TabsContent value="quizzes" className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-medium">Quizzes</h3>
-              <Button variant="outline" size="sm" className="gap-1">
-                <Plus size={16} /> Add Quiz
-              </Button>
-            </div>
+  // Re-order handler (up / down)
+  const handleReorderModule = async (moduleId, direction) => {
+    const delta = direction === "up" ? -1 : 1;
 
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-8">
-                <p className="text-muted-foreground mb-4">
-                  No quizzes added yet
-                </p>
-                <Button>
-                  <Plus size={16} className="mr-1" /> Create First Quiz
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+    const courseCopy = { ...selectedCourse };
+    const idx = courseCopy.modules.findIndex((m) => m.id === moduleId);
+    const newIdx = idx + delta;
+    if (newIdx < 0 || newIdx >= courseCopy.modules.length) return;
 
-        <Separator />
+    // swap locally
+    [courseCopy.modules[idx], courseCopy.modules[newIdx]] = [
+      courseCopy.modules[newIdx],
+      courseCopy.modules[idx],
+    ];
+    // optimistic UI
+    setSelectedCourse(courseCopy);
 
-        <div className="flex justify-between">
-          <Button variant="outline" onClick={() => setDetailsOpen(false)}>
-            Close
-          </Button>
-          <Button>Save Changes</Button>
-        </div>
-      </div>
-    );
+    try {
+      // send new positions to backend (simple approach)
+      await Promise.all(
+        courseCopy.modules.map((m, i) =>
+          axiosInstance.patch(`/modules/${m.id}/`, { position: i + 1 })
+        )
+      );
+      setSuccess("Module order updated");
+    } catch (err) {
+      setError("Failed to reorder modules");
+      fetchCourses(); // rollback
+    }
+  };
+
+  // Add module
+  const handleCreateModule = async (title) => {
+    try {
+      const res = await axiosInstance.post("/modules/", {
+        title,
+        course: selectedCourse.id,
+      });
+
+      setSelectedCourse((prev) => ({
+        ...prev,
+        modules: [...prev.modules, res.data],
+      }));
+
+      setSuccess("Module created");
+    } catch (err) {
+      setError("Failed to create module");
+    }
+  };
+
+  // Delete module
+  const handleDeleteModule = async (moduleId) => {
+    if (!confirm("Delete this module and its lessons?")) return;
+
+    try {
+      await axiosInstance.delete(`/modules/${moduleId}/`);
+
+      setSelectedCourse((prev) => ({
+        ...prev,
+        modules: prev.modules.filter((m) => m.id !== moduleId),
+      }));
+
+      setSuccess("Module deleted");
+    } catch (err) {
+      setError("Failed to delete module");
+    }
   };
 
   return (
     <div className="container py-8">
       <h1 className="text-3xl font-bold mb-8">Instructor Dashboard</h1>
 
+      {error && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
+      {success && (
+        <Alert className="mb-4 bg-green-50 border-green-200 text-green-800">
+          <AlertDescription>{success}</AlertDescription>
+        </Alert>
+      )}
+
       {loading ? (
         <div className="flex justify-center items-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
         </div>
       ) : courses.length === 0 ? (
         <Card className="w-full">
@@ -532,7 +353,13 @@ export default function InstructorDashboard() {
                     Fill in the details to create your first course.
                   </DialogDescription>
                 </DialogHeader>
-                <CourseForm />
+                <CourseForm
+                  editMode={false}
+                  onSubmit={handleCourseFormSubmit}
+                  onCancel={() => setDialogOpen(false)}
+                  error={error}
+                  success={success}
+                />
               </DialogContent>
             </Dialog>
           </CardContent>
@@ -558,27 +385,88 @@ export default function InstructorDashboard() {
                       : "Fill in the details to create a new course"}
                   </DialogDescription>
                 </DialogHeader>
-                <CourseForm />
+                <CourseForm
+                  editMode={editMode}
+                  initialData={selectedCourse}
+                  onSubmit={handleCourseFormSubmit}
+                  onCancel={() => setDialogOpen(false)}
+                  error={error}
+                  success={success}
+                />
               </DialogContent>
             </Dialog>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {courses.map((course) => (
-              <CourseCard key={course.id} course={course} />
+              <CourseCard
+                key={course.id}
+                course={course}
+                onEdit={handleEditCourse}
+                onDelete={handleDeleteCourse}
+                onViewDetails={openCourseDetails}
+              />
             ))}
           </div>
 
+          {/* Course Details View */}
           <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
             <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>
-                  {selectedCourse ? selectedCourse.title : "Course Details"}
+                  {selectedCourse?.title || "Course Details"}
                 </DialogTitle>
               </DialogHeader>
-              <CourseDetails />
+              <CourseDetails
+                course={selectedCourse}
+                onEditCourse={handleEditCourse}
+                onAddLesson={() => setIsAddLessonOpen(true)}
+                onEditLesson={handleEditLesson}
+                onDeleteLesson={handleDeleteLesson}
+                onRenameModule={handleOpenRenameModule}
+                onReorderModule={handleReorderModule}
+                setSelectedModule={setSelectedModule}
+                // selectedModule={selectedModule}
+                setAddModuleOpen={setAddModuleOpen}
+                onDeleteModule={handleDeleteModule}
+                onClose={() => setDetailsOpen(false)}
+              />
             </DialogContent>
           </Dialog>
+
+          {/* Add Lesson Modal */}
+          <LessonForm
+            open={isAddLessonOpen}
+            onOpenChange={setIsAddLessonOpen}
+            mode="add"
+            modules={selectedCourse?.modules || []}
+            onSubmit={handleAddLesson}
+          />
+
+          {/* Edit Lesson Modal */}
+          <LessonForm
+            open={isEditOpen}
+            onOpenChange={setIsEditOpen}
+            mode="edit"
+            modules={selectedCourse?.modules || []}
+            initialData={currentLesson}
+            onSubmit={handleUpdateLesson}
+          />
+
+          <ModuleRenameDialog
+            open={renameModalOpen}
+            onOpenChange={setRenameModalOpen}
+            moduleData={moduleToRename}
+            onSubmit={handleRenameModule}
+          />
+
+          <ModuleForm
+            open={addModuleOpen}
+            onOpenChange={setAddModuleOpen}
+            course={selectedCourse?.id}
+            onSubmit={handleCreateModule}
+            moduleCount={selectedCourse?.modules?.length || 0}
+          />
         </>
       )}
     </div>
