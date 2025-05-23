@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 
 const AuthContext = createContext();
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/";
+const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export function AuthProvider({ children }) {
   const [token, setToken] = useState(null);
