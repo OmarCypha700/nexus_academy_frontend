@@ -99,7 +99,6 @@ const handleEnroll = async () => {
     return;
   }
 
-  // If already enrolled, just redirect to the learn page
   if (isEnrolled) {
     router.push(`/learn/${id}`);
     return;
@@ -107,25 +106,17 @@ const handleEnroll = async () => {
 
   setEnrolling(true);
   try {
-    const res = await apiRequest(`api/enroll/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ course_id: id }),
-    });
+    const res = await axiosInstance.post("/api/enroll/", { course_id: id });
 
-    if (!res.ok) {
-      const errorData = await res.json();
-      throw new Error(errorData.detail || 'Failed to enroll in course');
+    if (res.status !== 200 && res.status !== 201) {
+      throw new Error(res.data?.detail || "Failed to enroll in course");
     }
 
     setIsEnrolled(true);
-    // Redirect to course content or learning page after enrollment
     router.push(`/learn/${id}`);
   } catch (err) {
-    console.error('Enrollment error:', err);
-    setError(err.message);
+    console.error("Enrollment error:", err);
+    setError(err.response?.data?.detail || err.message || "Enrollment failed");
   } finally {
     setEnrolling(false);
   }
