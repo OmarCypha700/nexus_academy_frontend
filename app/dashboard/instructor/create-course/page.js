@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import axios from "axios";
+import axiosInstance from "@/app/lib/axios";
 import { useRouter } from "next/navigation";
 
 export default function CreateCoursePage() {
@@ -14,32 +14,25 @@ export default function CreateCoursePage() {
   const [success, setSuccess] = useState(null);
   const router = useRouter();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const response = await axios.post(
-        "http://localhost:8000/api/courses/",
-        {
-          title,
-          description,
-          price,
-          playlist_id: playlistId,
-          intro_video_id: introVideoId,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("accessToken")}`, // Assuming the token is stored in localStorage
-          },
-        }
-      );
-      setSuccess("Course created successfully!");
-      setTimeout(() => {
-        router.push("/dashboard/instructor");
-      }, 1500);
-    } catch (err) {
-      setError("Failed to create course. Please try again.");
-    }
-  };
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  try {
+    const response = await axiosInstance.post("courses/", {
+      title,
+      description,
+      price,
+      playlist_id: playlistId,
+      intro_video_id: introVideoId,
+    });
+    setSuccess("Course created successfully!");
+    setTimeout(() => {
+      router.push("/dashboard/instructor");
+    }, 1500);
+  } catch (err) {
+    console.error("Course creation error:", err);
+    setError("Failed to create course. Please try again.");
+  }
+};
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-50">

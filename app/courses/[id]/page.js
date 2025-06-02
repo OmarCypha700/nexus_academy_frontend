@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import axiosInstance from "@/app/lib/axios";
 import {
   Clock,
   BookOpen,
@@ -39,7 +40,7 @@ import { useAuth } from "@/app/context/AuthContext";
 export default function CourseDetailPage() {
   const { id } = useParams();
   const router = useRouter();
-  const { apiRequest, user } = useAuth();
+  const { user } = useAuth();
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -47,45 +48,32 @@ export default function CourseDetailPage() {
   const [enrolling, setEnrolling] = useState(false);
   const [thumbnailError, setThumbnailError] = useState(false);
 
-  useEffect(() => {
-    const fetchCourseData = async () => {
-      try {
-        // Fetch course data
-        const res = await apiRequest(`api/courses/${id}/`);
+useEffect(() => {
+  const fetchCourseData = async () => {
+    try {
+      // Fetch course data
+      const courseRes = await axiosInstance.get(`courses/${id}/`);
+      const courseData = courseRes.data;
+      console.log("Course data received:", courseData);
+      setCourse(courseData);
 
-        if (!res.ok) {
-          const errorText = await res.text();
-          throw new Error(
-            `Failed to fetch course: ${res.status} - ${errorText}`
-          );
-        }
-
-        const courseData = await res.json();
-        console.log("Course data received:", courseData);
-        setCourse(courseData);
-
-        // Check if user is enrolled
-        if (user) {
-          const enrollmentRes = await apiRequest(
-            `api/enrollments/check/${id}/`
-          );
-          if (enrollmentRes.ok) {
-            const enrollmentData = await enrollmentRes.json();
-            setIsEnrolled(enrollmentData.enrolled);
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching data:", error);
-        setError(error.message || "Failed to load course");
-      } finally {
-        setLoading(false);
+      // Check if user is enrolled
+      if (user) {
+        const enrollmentRes = await axiosInstance.get(`enrollments/check/${id}/`);
+        setIsEnrolled(enrollmentRes.data.enrolled);
       }
-    };
-
-    if (id) {
-      fetchCourseData();
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      setError(error.response?.data?.detail || error.message || "Failed to load course");
+    } finally {
+      setLoading(false);
     }
-  }, [id, router, apiRequest, user]);
+  };
+
+  if (id) {
+    fetchCourseData();
+  }
+}, [id, user]);
 
   // Pre-load the thumbnail image to check if it's available
   useEffect(() => {

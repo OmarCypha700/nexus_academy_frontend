@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import axiosInstance from "@/app/lib/axios";
 import { Plus } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
@@ -50,6 +51,8 @@ export default function InstructorDashboard() {
   const [moduleToRename, setModuleToRename] = useState(null);
   const [selectedModule, setSelectedModule] = useState(null);
   const [addModuleOpen, setAddModuleOpen] = useState(false);
+
+  const router = useRouter();
 
   // Fetch courses
   useEffect(() => {

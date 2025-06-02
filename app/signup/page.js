@@ -45,20 +45,19 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen">
+    <div className="min-h-screen flex flex-col md:flex-row">
       {/* Left Image - visible only on md and above */}
       <div className="hidden md:flex md:w-1/2 items-center justify-center bg-blue-100">
          <img
-          src="/next.svg" // Replace with your actual image path
+          src="/next.svg"
           alt="Signin illustration"
           className="max-w-md"
         />
-        
       </div>
 
       {/* Form Section */}
-      <div className="flex flex-1 justify-center items-center px-6 py-12 bg-gray-100">
-        <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-xl">
+      <div className="w-full md:w-1/2 flex items-center justify-center p-6 bg-white">
+        <div className="w-full max-w-md space-y-6">
           <h2 className="text-3xl font-bold text-gray-900 mb-6 text-center">
             Create Your Account
           </h2>

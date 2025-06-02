@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '../context/AuthContext';
+import axiosInstance from "@/app/lib/axios";
 import { Search, Filter, SlidersHorizontal } from 'lucide-react';
 import { 
   Card, 
@@ -40,30 +40,23 @@ export default function CoursesPage() {
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [priceFilter, setPriceFilter] = useState('all');
-  const { apiRequest } = useAuth();
 
   useEffect(() => {
-    const fetchCourses = async () => {
-      try {
-        const response = await apiRequest('api/courses/');
-        
-        if (response.ok) {
-          const data = await response.json();
-          setCourses(data);
-          setFilteredCourses(data);
-        } else {
-          setError('Failed to load courses');
-        }
-      } catch (err) {
-        setError('An error occurred while fetching courses');
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchCourses = async () => {
+    try {
+      const response = await axiosInstance.get("courses/");
+      setCourses(response.data);
+      setFilteredCourses(response.data);
+    } catch (err) {
+      console.error(err);
+      setError("An error occurred while fetching courses");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchCourses();
-  }, [apiRequest]);
+  fetchCourses();
+}, []);
 
   useEffect(() => {
     // Apply filters whenever search term or price filter changes

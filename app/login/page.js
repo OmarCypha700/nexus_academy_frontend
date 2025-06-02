@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "@/app/components/ui/button";
+import Link from "next/link";
 
 export default function Login() {
   const [username, setUsername] = useState("");
@@ -14,7 +15,6 @@ export default function Login() {
   const searchParams = useSearchParams();
   const { login } = useAuth();
 
-  // Show error from query string (e.g., redirected from protected page)
   useEffect(() => {
     const authError = searchParams.get("error");
     if (authError) {
@@ -33,10 +33,10 @@ export default function Login() {
       if (success) {
         router.push("/courses");
       } else {
-        setError("Login failed. Please check your credentials.");
+        setError("Invalid credentials. Try again.");
       }
     } catch (err) {
-      setError("An error occurred during login. Please try again.");
+      setError("Login failed. Please try again later.");
       console.error(err);
     } finally {
       setIsLoading(false);
@@ -44,30 +44,29 @@ export default function Login() {
   };
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen">
-      {/* Left side image (only on desktop) */}
-      <div className="hidden md:flex md:w-1/2 items-center justify-center bg-blue-100">
-        <img
-          src="/next.svg" // Replace with your actual image path
-          alt="Login illustration"
-          className="max-w-md"
-        />
+    <div className="min-h-screen flex flex-col md:flex-row">
+      {/* Left section (desktop view) */}
+      <div className="hidden md:flex w-1/2 items-center justify-center bg-blue-50">
+        <img src="/next.svg" alt="Login" className="w-3/4 max-w-md" />
       </div>
 
-      {/* Right side login form */}
-      <div className="flex flex-col justify-center items-center w-full md:w-1/2 p-8">
-        <div className="bg-white w-full max-w-md p-6 rounded shadow space-y-6">
-          <h1 className="text-2xl font-bold text-center text-gray-800">Login</h1>
+      {/* Right section - login form */}
+      <div className="w-full md:w-1/2 flex items-center justify-center p-6 bg-white">
+        <div className="w-full max-w-md space-y-6">
+          <h2 className="text-3xl font-bold text-center text-gray-800">Welcome Back</h2>
+          <p className="text-sm text-center text-gray-600">
+            Sign in to your Nexus Academy account
+          </p>
 
           {error && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded text-sm">
+            <div className="bg-red-100 text-red-700 p-3 rounded text-sm text-center">
               {error}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="username">
+              <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
                 Username
               </label>
               <input
@@ -76,12 +75,12 @@ export default function Login() {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring focus:ring-blue-200"
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="password">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
                 Password
               </label>
               <input
@@ -90,14 +89,23 @@ export default function Login() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring focus:ring-blue-200"
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
               />
             </div>
 
-            <Button type="submit" disabled={isLoading} className="w-full">
-              {isLoading ? "Logging in..." : "Sign In"}
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? "Signing in..." : "Login"}
             </Button>
           </form>
+
+          <div className="text-sm flex justify-between pt-2">
+            <Link href="/signup" className="text-blue-600 hover:underline">
+              Don’t have an account?
+            </Link>
+            <Link href="#" className="text-blue-600 hover:underline">
+              Forgot password?
+            </Link>
+          </div>
         </div>
       </div>
     </div>
