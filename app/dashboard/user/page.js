@@ -52,7 +52,7 @@ export default function DashboardPage() {
   };
 
   fetchDashboard();
-}, []);
+}, [router]);
 
   const initials = (user?.last_name?.[0] || "") + (user?.first_name?.[0] || "")
 
@@ -84,7 +84,7 @@ export default function DashboardPage() {
               <h1 className="text-3xl font-bold text-gray-800">
                 Welcome back, {user?.last_name} {user?.first_name}
               </h1>
-              <p className="text-gray-600">Let's continue your learning journey</p>
+              <p className="text-gray-600">Let&apos;s continue your learning journey</p>
             </div>
           </div>
           <Button>
@@ -144,7 +144,7 @@ export default function DashboardPage() {
                   <CardHeader>
                     <CardTitle>No courses yet</CardTitle>
                     <CardDescription>
-                      You haven't enrolled in any courses. Browse our catalog to get started.
+                      You haven&apos;t enrolled in any courses. Browse our catalog to get started.
                     </CardDescription>
                   </CardHeader>
                   <CardFooter>

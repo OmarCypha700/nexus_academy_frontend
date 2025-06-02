@@ -342,7 +342,7 @@ export default function InstructorDashboard() {
               Welcome to your Instructor Dashboard
             </CardTitle>
             <CardDescription className="mb-6 text-center max-w-md">
-              You haven't created any courses yet. Get started by creating your
+              You haven&apos;t created any courses yet. Get started by creating your
               first course!
             </CardDescription>
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

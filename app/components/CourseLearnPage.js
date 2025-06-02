@@ -28,7 +28,6 @@ import { CourseSidebar } from "@/app/components/course/CourseSidebar";
 export default function CourseLearnPage({ courseId }) {
   const router = useRouter();
 
-  // Core state
   const [courseData, setCourseData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -37,29 +36,27 @@ export default function CourseLearnPage({ courseId }) {
   const [selectedQuizId, setSelectedQuizId] = useState(null);
   const [selectedAssignmentId, setSelectedAssignmentId] = useState(null);
 
-  // Get current lesson and module (memoized for performance)
-  const { currentLesson, currentModule } = useMemo(() => {
+  const { currentLesson, currentCourseModule } = useMemo(() => {
     if (!courseData?.modules || !activeLessonId) {
-      return { currentLesson: null, currentModule: null };
+      return { currentLesson: null, currentCourseModule: null };
     }
 
-    for (const module of courseData.modules) {
-      if (!module.lessons) continue;
-      const lesson = module.lessons.find((l) => l.id === activeLessonId);
+    for (const courseModule of courseData.modules) {
+      if (!courseModule.lessons) continue;
+      const lesson = courseModule.lessons.find((l) => l.id === activeLessonId);
       if (lesson) {
-        return { currentLesson: lesson, currentModule: module };
+        return { currentLesson: lesson, currentCourseModule: courseModule };
       }
     }
-    return { currentLesson: null, currentModule: null };
+    return { currentLesson: null, currentCourseModule: null };
   }, [courseData, activeLessonId]);
 
-  // Calculate progress (memoized)
   const progressInfo = useMemo(() => {
     if (!courseData?.modules)
       return { totalLessons: 0, completedCount: 0, progress: 0 };
 
     const totalLessons = courseData.modules.reduce(
-      (total, module) => total + (module.lessons?.length || 0),
+      (total, courseModule) => total + (courseModule.lessons?.length || 0),
       0
     );
     const completedCount = courseData.completed_lessons?.length || 0;
@@ -70,7 +67,6 @@ export default function CourseLearnPage({ courseId }) {
     return { totalLessons, completedCount, progress };
   }, [courseData]);
 
-  // Fetch course data
   const fetchCourseData = useCallback(async () => {
     if (!courseId) {
       setError("Course ID is missing");
@@ -87,7 +83,6 @@ export default function CourseLearnPage({ courseId }) {
       );
       const data = response.data;
 
-      // Handle empty modules by creating default structure
       const processedData = {
         ...data,
         modules:
@@ -104,7 +99,6 @@ export default function CourseLearnPage({ courseId }) {
 
       setCourseData(processedData);
 
-      // Set initial active lesson if available
       if (processedData.modules?.[0]?.lessons?.length > 0) {
         const firstLesson = processedData.modules[0].lessons[0];
         setActiveLessonId(firstLesson.id);
@@ -117,7 +111,6 @@ export default function CourseLearnPage({ courseId }) {
     }
   }, [courseId]);
 
-  // Mark lesson as complete
   const markLessonComplete = useCallback(
     async (lessonId) => {
       try {
@@ -137,9 +130,9 @@ export default function CourseLearnPage({ courseId }) {
           return {
             ...prev,
             completed_lessons: newCompletedLessons,
-            modules: prev.modules.map((module) => ({
-              ...module,
-              lessons: module.lessons.map((lesson) =>
+            modules: prev.modules.map((courseModule) => ({
+              ...courseModule,
+              lessons: courseModule.lessons.map((lesson) =>
                 lesson.id === lessonId ? { ...lesson, completed: true } : lesson
               ),
             })),
@@ -152,16 +145,15 @@ export default function CourseLearnPage({ courseId }) {
     [courseId]
   );
 
-  // Navigation helpers
   const findAdjacentLesson = useCallback(
     (direction) => {
       if (!courseData?.modules || !activeLessonId) return null;
 
       const allLessons = [];
-      courseData.modules.forEach((module) => {
-        if (module.lessons) {
-          module.lessons.forEach((lesson) => {
-            allLessons.push({ ...lesson, moduleId: module.id });
+      courseData.modules.forEach((courseModule) => {
+        if (courseModule.lessons) {
+          courseModule.lessons.forEach((lesson) => {
+            allLessons.push({ ...lesson, moduleId: courseModule.id });
           });
         }
       });
@@ -202,7 +194,6 @@ export default function CourseLearnPage({ courseId }) {
     []
   );
 
-  // Initialize course data
   useEffect(() => {
     fetchCourseData();
   }, [fetchCourseData]);
@@ -222,7 +213,7 @@ export default function CourseLearnPage({ courseId }) {
       <Alert>
         <AlertTitle>Course content is being prepared</AlertTitle>
         <AlertDescription>
-          This course doesn't have any modules or lessons available yet. Please
+          This course doesn&apos;t have any modules or lessons available yet. Please
           check back later.
         </AlertDescription>
       </Alert>
@@ -338,7 +329,7 @@ export default function CourseLearnPage({ courseId }) {
             <CourseSidebar
               course={courseData}
               progress={progressInfo.progress}
-              currentModule={currentModule || {}}
+              currentModule={currentCourseModule || {}}
               currentLesson={currentLesson || {}}
               completedLessons={courseData.completed_lessons || []}
               navigateToLesson={navigateToLesson}
@@ -367,10 +358,10 @@ export default function CourseLearnPage({ courseId }) {
             {/* Main content card */}
             <Card className="mb-4 md:mb-6 shadow-sm">
               <CardContent className="p-3 sm:p-4 md:p-6">
-                {currentLesson && currentModule ? (
+                {currentLesson && currentCourseModule ? (
                   <div className="space-y-4 md:space-y-6">
                     <LessonHeader
-                      currentModule={currentModule}
+                      currentModule={currentCourseModule}
                       currentLesson={currentLesson}
                       completedLessons={courseData.completed_lessons || []}
                       navigateToPreviousLesson={navigateToPreviousLesson}

@@ -4,7 +4,7 @@ export function LessonDescription({ currentLesson }) {
         <p>{currentLesson.description}</p>
         {currentLesson.learning_objectives && (
           <>
-            <h3>What You'll Learn</h3>
+            <h3>What You&apos;ll Learn</h3>
             <ul>
               {currentLesson.learning_objectives.map((objective, idx) => (
                 <li key={idx}>{objective}</li>
@@ -14,7 +14,7 @@ export function LessonDescription({ currentLesson }) {
         )}
         {!currentLesson.learning_objectives && (
           <>
-            <h3>What You'll Learn</h3>
+            <h3>What You&apos;ll Learn</h3>
             <ul>
               <li>Key concepts covered in this lesson</li>
               <li>Practical applications of the material</li>

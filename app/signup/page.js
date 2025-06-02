@@ -6,6 +6,7 @@ import axiosInstance from "@/app/lib/axios";
 import { Input } from "@/app/components/ui/input";
 import { Button } from "@/app/components/ui/button";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function SignupPage() {
   const [formData, setFormData] = useState({
@@ -48,10 +49,13 @@ export default function SignupPage() {
     <div className="min-h-screen flex flex-col md:flex-row">
       {/* Left Image - visible only on md and above */}
       <div className="hidden md:flex md:w-1/2 items-center justify-center bg-blue-100">
-         <img
+         <Image
           src="/next.svg"
           alt="Signin illustration"
           className="max-w-md"
+          width={500}
+          height={500}
+          priority
         />
       </div>
 

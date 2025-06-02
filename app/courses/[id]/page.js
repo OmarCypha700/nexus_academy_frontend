@@ -194,7 +194,7 @@ const handleEnroll = async () => {
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Course Not Found</AlertTitle>
           <AlertDescription>
-            The course you're looking for doesn't exist or you don't have access
+            The course you&apos;re looking for doesn&apos;t exist or you don&apos;t have access
             to it.
           </AlertDescription>
         </Alert>
@@ -292,7 +292,7 @@ const handleEnroll = async () => {
                     <p className="text-gray-700 mt-4">
                       This comprehensive course will take you through all the
                       essential concepts and give you practical, hands-on
-                      experience. By the end, you'll have the skills and
+                      experience. By the end, you&apos;ll have the skills and
                       confidence to apply these principles in real-world
                       scenarios.
                     </p>
@@ -301,7 +301,7 @@ const handleEnroll = async () => {
 
                 {/* What You'll Learn */}
                 <div>
-                  <h3 className="text-xl font-bold mb-3">What You'll Learn</h3>
+                  <h3 className="text-xl font-bold mb-3">What You&apos;ll Learn</h3>
                   <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     {course.outcomes?.map((outcome) => (
                       <li key={outcome.id} className="flex items-start">

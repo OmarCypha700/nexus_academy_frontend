@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "@/app/components/ui/button";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function Login() {
   const [username, setUsername] = useState("");
@@ -47,7 +48,14 @@ export default function Login() {
     <div className="min-h-screen flex flex-col md:flex-row">
       {/* Left section (desktop view) */}
       <div className="hidden md:flex w-1/2 items-center justify-center bg-blue-50">
-        <img src="/next.svg" alt="Login" className="w-3/4 max-w-md" />
+        <Image 
+          src="/next.svg" 
+          alt="Login" 
+          className="w-3/4 max-w-md"
+          width={500}
+          height={500}
+          priority           
+        />
       </div>
 
       {/* Right section - login form */}
