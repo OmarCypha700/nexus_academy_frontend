@@ -106,7 +106,7 @@ const handleEnroll = async () => {
 
   setEnrolling(true);
   try {
-    const res = await axiosInstance.post("/api/enroll/", { course_id: id });
+    const res = await axiosInstance.post("/enroll/", { course_id: id });
 
     if (res.status !== 200 && res.status !== 201) {
       throw new Error(res.data?.detail || "Failed to enroll in course");
