@@ -11,7 +11,12 @@ import {
 } from "@/app/components/ui/card";
 import { Badge } from "@/app/components/ui/badge";
 
-export default function CourseCard({ course, onEdit, onDelete, onViewDetails }) {
+export default function CourseCard({
+  course,
+  onEdit,
+  onDelete,
+  onViewDetails,
+}) {
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -51,10 +56,24 @@ export default function CourseCard({ course, onEdit, onDelete, onViewDetails }) 
       </CardHeader>
 
       <CardFooter className="pt-2 flex justify-between">
-        <Badge variant="outline">${course.price}</Badge>
+        {course.price == 0 ? (
+          <Badge
+            variant="outline"
+            className="bg-green-100 text-green-800 border-green-200"
+          >
+            Free
+          </Badge>
+        ) : (
+          <Badge
+            variant="outline"
+            className="bg-blue-100 text-blue-800 border-blue-200"
+          >
+            ${course.price}
+          </Badge>
+        )}
         <span className="text-xs text-muted-foreground">
-          {course.lessons?.length
-            ? `${course.lessons.length} lessons`
+          {course.total_lessons > 0
+            ? `${course.total_lessons} lessons`
             : "No lessons"}
         </span>
       </CardFooter>

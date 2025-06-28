@@ -18,6 +18,7 @@ import {
   DialogTitle,
   DialogDescription,
   DialogTrigger,
+  DialogFooter,
 } from "@/app/components/ui/dialog";
 import { Alert, AlertDescription } from "@/app/components/ui/alert";
 
@@ -28,6 +29,9 @@ import CourseDetails from "@/app/components/dashboard/course/CourseDetails";
 import LessonForm from "@/app/components/dashboard/lesson/LessonForm";
 import ModuleRenameDialog from "@/app/components/dashboard/module/ModuleRenameDialog";
 import ModuleForm from "@/app/components/dashboard/module/ModuleForm";
+import QuizForm from "@/app/components/dashboard/quiz/QuizForm";
+import QuestionForm from "@/app/components/dashboard/quiz/QuestionForm";
+import CourseOutcomeForm from "@/app/components/dashboard/course/CourseOutcomeForm";
 
 export default function InstructorDashboard() {
   const [courses, setCourses] = useState([]);
@@ -40,6 +44,13 @@ export default function InstructorDashboard() {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isAddLessonOpen, setIsAddLessonOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
+  const [quizModalOpen, setQuizModalOpen] = useState(false);
+  const [questionModalOpen, setQuestionModalOpen] = useState(false);
+  const [quizFormData, setQuizFormData] = useState(null); // null or quiz object
+  const [questionFormData, setQuestionFormData] = useState(null); // null or question object
+  const [selectedQuizId, setSelectedQuizId] = useState(null); // For question management
+  const [outcomeModalOpen, setOutcomeModalOpen] = useState(false); // New state for outcome dialog
+  const [outcomes, setOutcomes] = useState([]);
 
   // Feedback
   const [error, setError] = useState(null);
@@ -54,17 +65,12 @@ export default function InstructorDashboard() {
 
   const router = useRouter();
 
-  // Fetch courses
+  // Fetch courses and handle auth
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
+    const storedUser = JSON.parse(localStorage.getItem("user"));
     const token = localStorage.getItem("accessToken");
 
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-
     if (!token) {
-      // Redirect to login with error message
       router.push(
         `/login?error=${encodeURIComponent(
           "You must be logged in to access the dashboard."
@@ -76,14 +82,25 @@ export default function InstructorDashboard() {
     fetchCourses();
   }, []);
 
+  // Clear feedback after 3 seconds
+  useEffect(() => {
+    if (error || success) {
+      const timer = setTimeout(() => {
+        setError(null);
+        setSuccess(null);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [error, success]);
+
   const fetchCourses = async () => {
     setLoading(true);
     try {
       const response = await axiosInstance.get("/courses/");
-      setCourses(response.data);
+      setCourses(response.data.results || response.data);
       setError(null);
     } catch (err) {
-      setError("Failed to load courses");
+      setError(err.response?.data?.detail || "Failed to load courses");
       console.error(err);
     } finally {
       setLoading(false);
@@ -117,7 +134,10 @@ export default function InstructorDashboard() {
       resetForm();
       setDialogOpen(false);
     } catch (err) {
-      setError(`Failed to ${editMode ? "update" : "create"} course`);
+      setError(
+        err.response?.data?.detail ||
+          `Failed to ${editMode ? "update" : "create"} course`
+      );
     }
   };
 
@@ -134,14 +154,46 @@ export default function InstructorDashboard() {
       setCourses(courses.filter((c) => c.id !== courseId));
       setSuccess("Course deleted successfully!");
     } catch (err) {
-      setError("Failed to delete course");
+      setError(err.response?.data?.detail || "Failed to delete course");
     }
   };
 
-  const openCourseDetails = (course) => {
-    setSelectedCourse(course);
-    setDetailsOpen(true);
+  const openCourseDetails = async (course) => {
+    try {
+      const response = await axiosInstance.get(`/courses/${course.id}/`);
+      setSelectedCourse(response.data);
+      setDetailsOpen(true);
+    } catch (err) {
+      setError(err.response?.data?.detail || "Failed to load course details");
+      console.error(err);
+    }
   };
+
+  // Outcome Handlers
+
+  // const handleOutcome = () => {
+  //   setOutcomeModalOpen(true);
+  // };
+
+  // const handleOutcomeSubmit = async (payload) => {
+  //   try {
+  //     console.log(payload);
+  //     const response = await axiosInstance.post(
+  //       "/courses/outcomes/bulk-create/",
+  //       payload
+  //     );
+  //     setOutcomes(response.data.outcomes); // Update outcomes state
+  //     setSelectedCourse((prev) => ({
+  //       ...prev,
+  //       outcomes: response.data.outcomes,
+  //     })); // Update course with new outcomes
+  //     setSuccess("Course outcomes saved successfully!");
+  //     setOutcomeModalOpen(false);
+  //   } catch (err) {
+  //     setError(err.response?.data?.detail || "Failed to save course outcomes");
+  //     console.error(err);
+  //   }
+  // };
 
   // Lesson Handlers
   const handleEditLesson = (lesson) => {
@@ -172,7 +224,7 @@ export default function InstructorDashboard() {
         setSuccess("Lesson updated successfully!");
       }
     } catch (err) {
-      setError("Failed to update lesson");
+      setError(err.response?.data?.detail || "Failed to update lesson");
     }
   };
 
@@ -197,7 +249,7 @@ export default function InstructorDashboard() {
         setSuccess("Lesson added successfully!");
       }
     } catch (err) {
-      setError("Failed to add lesson");
+      setError(err.response?.data?.detail || "Failed to add lesson");
     }
   };
 
@@ -212,22 +264,18 @@ export default function InstructorDashboard() {
       setSelectedCourse((prev) => ({ ...prev, modules: updatedModules }));
       setSuccess("Lesson deleted successfully!");
     } catch (err) {
-      setError("Failed to delete lesson");
+      setError(err.response?.data?.detail || "Failed to delete lesson");
     }
   };
 
   // Module Handlers
-
-  // Open rename module modal
   const handleOpenRenameModule = (module) => {
     setModuleToRename(module);
     setRenameModalOpen(true);
   };
 
-  // Submit new module title
   const handleRenameModule = async (newTitle) => {
     try {
-      // optimistic UI update
       setSelectedCourse((prev) => ({
         ...prev,
         modules: prev.modules.map((m) =>
@@ -239,68 +287,46 @@ export default function InstructorDashboard() {
         title: newTitle,
       });
 
-      setSuccess("Module renamed");
+      setSuccess("Module renamed successfully!");
+      setRenameModalOpen(false);
     } catch (err) {
-      setError("Failed to rename module");
-      // rollback UI if needed
+      setError(err.response?.data?.detail || "Failed to rename module");
       fetchCourses();
     }
   };
 
-  // Re-order handler (up / down)
   const handleReorderModule = async (moduleId, direction) => {
-    const delta = direction === "up" ? -1 : 1;
-
-    const courseCopy = { ...selectedCourse };
-    const idx = courseCopy.modules.findIndex((m) => m.id === moduleId);
-    const newIdx = idx + delta;
-    if (newIdx < 0 || newIdx >= courseCopy.modules.length) return;
-
-    // swap locally
-    [courseCopy.modules[idx], courseCopy.modules[newIdx]] = [
-      courseCopy.modules[newIdx],
-      courseCopy.modules[idx],
-    ];
-    // optimistic UI
-    setSelectedCourse(courseCopy);
-
     try {
-      // send new positions to backend (simple approach)
-      await Promise.all(
-        courseCopy.modules.map((m, i) =>
-          axiosInstance.patch(`/modules/${m.id}/`, { position: i + 1 })
-        )
-      );
-      setSuccess("Module order updated");
-    } catch (err) {
-      setError("Failed to reorder modules");
-      fetchCourses(); // rollback
-    }
-  };
+      const courseCopy = { ...selectedCourse };
+      const idx = courseCopy.modules.findIndex((m) => m.id === moduleId);
+      const newIdx = idx + (direction === "up" ? -1 : 1);
+      if (newIdx < 0 || newIdx >= courseCopy.modules.length) return;
 
-  // Add module
-  const handleCreateModule = async (title) => {
-    try {
-      const res = await axiosInstance.post("/modules/", {
-        title,
-        course: selectedCourse.id,
+      const updatedModules = [...courseCopy.modules];
+      [updatedModules[idx], updatedModules[newIdx]] = [
+        updatedModules[newIdx],
+        updatedModules[idx],
+      ];
+      updatedModules.forEach((m, i) => (m.position = i + 1));
+
+      setSelectedCourse({ ...courseCopy, modules: updatedModules });
+
+      await axiosInstance.post("/modules/reorder/", {
+        modules: updatedModules.map((m) => ({
+          id: m.id,
+          position: m.position,
+        })),
       });
 
-      setSelectedCourse((prev) => ({
-        ...prev,
-        modules: [...prev.modules, res.data],
-      }));
-
-      setSuccess("Module created");
+      setSuccess("Module order updated successfully!");
     } catch (err) {
-      setError("Failed to create module");
+      setError(err.response?.data?.detail || "Failed to reorder modules");
+      fetchCourses();
     }
   };
 
-  // Delete module
   const handleDeleteModule = async (moduleId) => {
     if (!confirm("Delete this module and its lessons?")) return;
-
     try {
       await axiosInstance.delete(`/modules/${moduleId}/`);
 
@@ -309,9 +335,9 @@ export default function InstructorDashboard() {
         modules: prev.modules.filter((m) => m.id !== moduleId),
       }));
 
-      setSuccess("Module deleted");
+      setSuccess("Module deleted successfully!");
     } catch (err) {
-      setError("Failed to delete module");
+      setError(err.response?.data?.detail || "Failed to delete module");
     }
   };
 
@@ -342,8 +368,8 @@ export default function InstructorDashboard() {
               Welcome to your Instructor Dashboard
             </CardTitle>
             <CardDescription className="mb-6 text-center max-w-md">
-              You haven&apos;t created any courses yet. Get started by creating your
-              first course!
+              You haven&apos;t created any courses yet. Get started by creating
+              your first course!
             </CardDescription>
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogTrigger asChild>
@@ -412,7 +438,7 @@ export default function InstructorDashboard() {
             ))}
           </div>
 
-          {/* Course Details View */}
+          {/* Course Details Modal */}
           <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
             <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
@@ -429,13 +455,40 @@ export default function InstructorDashboard() {
                 onRenameModule={handleOpenRenameModule}
                 onReorderModule={handleReorderModule}
                 setSelectedModule={setSelectedModule}
-                // selectedModule={selectedModule}
                 setAddModuleOpen={setAddModuleOpen}
                 onDeleteModule={handleDeleteModule}
+                openQuizModal={(quiz) => {
+                  setQuizFormData(quiz);
+                  setQuizModalOpen(true);
+                }}
+                openQuestionModal={(quizId, question) => {
+                  if (!quizId) console.error("Quiz ID is undefined");
+                  setSelectedQuizId(quizId);
+                  setQuestionFormData(question);
+                  setQuestionModalOpen(true);
+                }}
+                // openOutcomeModal={handleOutcome}
+                // outcomes={outcomes}
                 onClose={() => setDetailsOpen(false)}
               />
             </DialogContent>
           </Dialog>
+
+          {/* Course Outcome Modal */}
+          {/* <Dialog open={outcomeModalOpen} onOpenChange={setOutcomeModalOpen}>
+            <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto">
+              <DialogTitle>Course Outcomes</DialogTitle> */}
+              {/* <CourseOutcomeForm
+                open={outcomeModalOpen}
+                onOpenChange={setOutcomeModalOpen}
+                courseId={selectedCourse?.id}
+                onSubmit={handleOutcomeSubmit}
+                error={error}
+                success={success}
+                initialData={outcomes}
+              /> */}
+            {/* </DialogContent>
+          </Dialog> */}
 
           {/* Add Lesson Modal */}
           <LessonForm
@@ -456,20 +509,122 @@ export default function InstructorDashboard() {
             onSubmit={handleUpdateLesson}
           />
 
+          {/* Rename Module Modal */}
           <ModuleRenameDialog
+            courseId={selectedCourse?.id}
             open={renameModalOpen}
             onOpenChange={setRenameModalOpen}
             moduleData={moduleToRename}
-            onSubmit={handleRenameModule}
+            onConfirm={handleRenameModule}
           />
 
+          {/* Add Module Modal */}
           <ModuleForm
             open={addModuleOpen}
             onOpenChange={setAddModuleOpen}
-            course={selectedCourse?.id}
-            onSubmit={handleCreateModule}
+            courseId={selectedCourse?.id}
             moduleCount={selectedCourse?.modules?.length || 0}
           />
+
+          {/* Quiz Modal */}
+          <Dialog open={quizModalOpen} onOpenChange={setQuizModalOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>
+                  {quizFormData?.id ? "Edit Quiz" : "Create Quiz"}
+                </DialogTitle>
+              </DialogHeader>
+              <QuizForm
+                courseId={selectedCourse?.id}
+                quiz={quizFormData}
+                onSubmit={async (data) => {
+                  try {
+                    if (quizFormData?.id) {
+                      await axiosInstance.put(`/quizzes/${quizFormData.id}/`, {
+                        ...data,
+                        course: selectedCourse?.id,
+                      });
+                      setSuccess("Quiz updated successfully!");
+                    } else {
+                      await axiosInstance.post("/quizzes/", {
+                        ...data,
+                        course: selectedCourse?.id,
+                      });
+                      setSuccess("Quiz created successfully!");
+                    }
+                    setQuizModalOpen(false);
+                    setQuizFormData(null);
+                    await openCourseDetails(selectedCourse); // Refresh course data
+                  } catch (err) {
+                    setError(
+                      err.response?.data?.detail || "Failed to save quiz"
+                    );
+                  }
+                }}
+                onCancel={() => {
+                  setQuizModalOpen(false);
+                  setQuizFormData(null);
+                }}
+              />
+            </DialogContent>
+          </Dialog>
+
+          {/* Question Modal */}
+          <Dialog open={questionModalOpen} onOpenChange={setQuestionModalOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>
+                  {questionFormData?.id ? "Edit Question" : "Create Question"}
+                </DialogTitle>
+              </DialogHeader>
+              <QuestionForm
+                quizId={selectedQuizId}
+                question={questionFormData}
+                onSubmit={async (data) => {
+                  try {
+                    const payload = {
+                      ...data,
+                      quiz: selectedQuizId,
+                    };
+                    console.log(
+                      "Submitting question payload:",
+                      JSON.stringify(payload, null, 2)
+                    );
+                    if (questionFormData?.id) {
+                      await axiosInstance.put(
+                        `/questions/${questionFormData.id}/`,
+                        payload
+                      );
+                      setSuccess("Question updated successfully!");
+                    } else {
+                      await axiosInstance.post("/questions/", payload);
+                      setSuccess("Question created successfully!");
+                    }
+                    setQuestionModalOpen(false);
+                    setQuestionFormData(null);
+                    await openCourseDetails(selectedCourse); // Refresh course data
+                  } catch (err) {
+                    console.error("Question Error:", {
+                      status: err.response?.status,
+                      data: err.response?.data,
+                      payload: data,
+                      message: err.message,
+                    });
+                    setError(
+                      err.response?.data?.non_field_errors?.[0] ||
+                        err.response?.data?.detail ||
+                        JSON.stringify(err.response?.data) ||
+                        "Failed to save question"
+                    );
+                  }
+                }}
+                onCancel={() => {
+                  setQuestionModalOpen(false);
+                  setQuestionFormData(null);
+                }}
+              />
+            </DialogContent>
+          </Dialog>
         </>
       )}
     </div>

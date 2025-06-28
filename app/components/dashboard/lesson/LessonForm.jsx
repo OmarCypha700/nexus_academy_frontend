@@ -89,6 +89,7 @@ export default function LessonForm({
               placeholder="Lesson title"
               value={formData.title}
               onChange={handleChange}
+              required
             />
           </div>
 
@@ -100,12 +101,13 @@ export default function LessonForm({
               placeholder="Lesson description"
               value={formData.description}
               onChange={handleChange}
+              required
             />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="module">Module</Label>
-            <Select value={formData.module} onValueChange={handleSelectModule}>
+            <Select value={formData.module} onValueChange={handleSelectModule} required>
               <SelectTrigger>
                 <SelectValue placeholder="Select module" />
               </SelectTrigger>
@@ -127,6 +129,7 @@ export default function LessonForm({
               placeholder="YouTube Video ID"
               value={formData.video_id}
               onChange={handleChange}
+              required
             />
           </div>
 
@@ -140,6 +143,7 @@ export default function LessonForm({
                 placeholder="Duration"
                 value={formData.duration}
                 onChange={handleChange}
+                required
               />
             </div>
             <div className="space-y-2">
@@ -151,6 +155,7 @@ export default function LessonForm({
                 placeholder="Position"
                 value={formData.position}
                 onChange={handleChange}
+                required
               />
             </div>
           </div>

@@ -1,16 +1,16 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import axiosInstance from "@/app/lib/axios";
-import { Search, Filter, SlidersHorizontal } from 'lucide-react';
-import { 
-  Card, 
-  CardContent, 
-  CardFooter, 
-  CardHeader, 
-  CardTitle, 
-  CardDescription 
+import { Search, Filter, SlidersHorizontal } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+  CardDescription,
 } from "@/app/components/ui/card";
 import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
@@ -37,26 +37,26 @@ export default function CoursesPage() {
   const [courses, setCourses] = useState([]);
   const [filteredCourses, setFilteredCourses] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [priceFilter, setPriceFilter] = useState('all');
+  const [error, setError] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [priceFilter, setPriceFilter] = useState("all");
 
   useEffect(() => {
-  const fetchCourses = async () => {
-    try {
-      const response = await axiosInstance.get("courses/");
-      setCourses(response.data);
-      setFilteredCourses(response.data);
-    } catch (err) {
-      console.error(err);
-      setError("An error occurred while fetching courses");
-    } finally {
-      setLoading(false);
-    }
-  };
+    const fetchCourses = async () => {
+      try {
+        const response = await axiosInstance.get("courses/");
+        setCourses(response.data);
+        setFilteredCourses(response.data);
+      } catch (err) {
+        console.error(err);
+        setError("An error occurred while fetching courses");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  fetchCourses();
-}, []);
+    fetchCourses();
+  }, []);
 
   useEffect(() => {
     // Apply filters whenever search term or price filter changes
@@ -65,26 +65,29 @@ export default function CoursesPage() {
 
   const filterCourses = () => {
     let results = [...courses];
-    
+
     // Apply search filter
     if (searchTerm) {
-      results = results.filter(course => 
-        course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        course.description.toLowerCase().includes(searchTerm.toLowerCase())
+      results = results.filter(
+        (course) =>
+          course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          course.description.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
-    
+
     // Apply price filter
-    if (priceFilter === 'free') {
-      results = results.filter(course => course.price == 0.00);
-    } else if (priceFilter === 'paid') {
-      results = results.filter(course => course.price > 0.00);
-    } else if (priceFilter === 'under50') {
-      results = results.filter(course => course.price > 0.00 && course.price <= 50.00);
-    } else if (priceFilter === 'over50') {
-      results = results.filter(course => course.price > 50.00);
+    if (priceFilter === "free") {
+      results = results.filter((course) => course.price == 0.0);
+    } else if (priceFilter === "paid") {
+      results = results.filter((course) => course.price > 0.0);
+    } else if (priceFilter === "under50") {
+      results = results.filter(
+        (course) => course.price > 0.0 && course.price <= 50.0
+      );
+    } else if (priceFilter === "over50") {
+      results = results.filter((course) => course.price > 50.0);
     }
-    
+
     setFilteredCourses(results);
   };
 
@@ -94,17 +97,27 @@ export default function CoursesPage() {
 
   const renderCourseCard = (course) => {
     return (
-      <Card 
-        key={course.id} 
+      <Card
+        key={course.id}
         className="flex flex-col h-full hover:shadow-lg transition-shadow duration-300"
       >
         <CardHeader className="pb-2">
           <div className="flex justify-between items-start">
             <CardTitle className="text-xl">{course.title}</CardTitle>
-            {course.price === 0 ? (
-              <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200">Free</Badge>
+            {course.price == 0 ? (
+              <Badge
+                variant="outline"
+                className="bg-green-100 text-green-800 border-green-200"
+              >
+                Free
+              </Badge>
             ) : (
-              <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-200">${course.price}</Badge>
+              <Badge
+                variant="outline"
+                className="bg-blue-100 text-blue-800 border-blue-200"
+              >
+                ${course.price}
+              </Badge>
             )}
           </div>
           <CardDescription className="line-clamp-2 text-gray-500 mt-1">
@@ -114,13 +127,15 @@ export default function CoursesPage() {
         <CardContent className="flex-grow">
           {course.instructor_details && (
             <p className="text-sm text-gray-600">
-              <span className="font-medium">Instructor:</span> {course.instructor_details.first_name} {course.instructor_details.last_name}
+              <span className="font-medium">Instructor:</span>{" "}
+              {course.instructor_details.first_name}{" "}
+              {course.instructor_details.last_name}
             </p>
           )}
         </CardContent>
         <CardFooter>
-          <Button 
-            className="w-full" 
+          <Button
+            className="w-full"
             onClick={() => navigateToCourse(course.id)}
           >
             View Course
@@ -131,21 +146,23 @@ export default function CoursesPage() {
   };
 
   const renderSkeletonCards = () => {
-    return Array(6).fill().map((_, index) => (
-      <Card key={index} className="flex flex-col h-full">
-        <CardHeader className="pb-2">
-          <Skeleton className="h-6 w-3/4 mb-2" />
-          <Skeleton className="h-4 w-full" />
-          <Skeleton className="h-4 w-full mt-1" />
-        </CardHeader>
-        <CardContent className="flex-grow">
-          <Skeleton className="h-4 w-1/2" />
-        </CardContent>
-        <CardFooter>
-          <Skeleton className="h-10 w-full" />
-        </CardFooter>
-      </Card>
-    ));
+    return Array(6)
+      .fill()
+      .map((_, index) => (
+        <Card key={index} className="flex flex-col h-full">
+          <CardHeader className="pb-2">
+            <Skeleton className="h-6 w-3/4 mb-2" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-full mt-1" />
+          </CardHeader>
+          <CardContent className="flex-grow">
+            <Skeleton className="h-4 w-1/2" />
+          </CardContent>
+          <CardFooter>
+            <Skeleton className="h-10 w-full" />
+          </CardFooter>
+        </Card>
+      ));
   };
 
   return (
@@ -153,11 +170,14 @@ export default function CoursesPage() {
       <div className="container mx-auto px-4 py-8">
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8">
           <h1 className="text-3xl font-bold mb-4 md:mb-0">Explore Courses</h1>
-          
+
           <div className="flex space-x-2">
             {/* Search Bar */}
             <div className="relative flex-grow max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+              <Search
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                size={18}
+              />
               <Input
                 type="text"
                 placeholder="Search courses..."
@@ -166,7 +186,7 @@ export default function CoursesPage() {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            
+
             {/* Filters Sheet for Mobile */}
             <Sheet>
               <SheetTrigger asChild>
@@ -198,7 +218,7 @@ export default function CoursesPage() {
                 </div>
               </SheetContent>
             </Sheet>
-            
+
             {/* Desktop Filter */}
             <div className="hidden md:block">
               <Select value={priceFilter} onValueChange={setPriceFilter}>
@@ -219,25 +239,27 @@ export default function CoursesPage() {
             </div>
           </div>
         </div>
-        
+
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
             {error}
           </div>
         )}
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {loading ? (
             renderSkeletonCards()
           ) : filteredCourses.length > 0 ? (
-            filteredCourses.map(course => renderCourseCard(course))
+            filteredCourses.map((course) => renderCourseCard(course))
           ) : (
             <div className="col-span-full text-center py-12">
-              <h3 className="text-xl font-medium text-gray-700 mb-2">No courses found</h3>
+              <h3 className="text-xl font-medium text-gray-700 mb-2">
+                No courses found
+              </h3>
               <p className="text-gray-500">
-                {searchTerm || priceFilter !== 'all' ? 
-                  "Try changing your search criteria or filters" : 
-                  "There are no courses available at the moment"}
+                {searchTerm || priceFilter !== "all"
+                  ? "Try changing your search criteria or filters"
+                  : "There are no courses available at the moment"}
               </p>
             </div>
           )}

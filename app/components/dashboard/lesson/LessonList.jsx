@@ -34,7 +34,7 @@ export default function LessonList({
               You must add at least one module before creating lessons.
             </p>
           )}
-          <Button
+          {/* <Button
             variant="outline"
             size="sm"
             className="gap-1"
@@ -42,7 +42,7 @@ export default function LessonList({
             disabled={modules.length === 0}
           >
             <Plus size={16} /> Add Lesson
-          </Button>
+          </Button> */}
 
           <Button
             variant="outline"
@@ -50,7 +50,7 @@ export default function LessonList({
             className="gap-1"
             onClick={() => setAddModuleOpen(true)}
           >
-            <Plus size={16} /> Add Module
+            <Plus size={16} /> New Module
           </Button>
         </div>
       </div>

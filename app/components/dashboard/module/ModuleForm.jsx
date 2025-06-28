@@ -11,9 +11,17 @@ import { Button } from "@/app/components/ui/button";
 import { Label } from "@/app/components/ui/label";
 import axiosInstance from "@/app/lib/axios";
 
-export default function ModuleForm({ open, onOpenChange, onSubmit, course, moduleCount }) {
+export default function ModuleForm({
+  open,
+  onOpenChange,
+  onSubmit,
+  courseId,
+  moduleCount,
+}) {
   const [title, setTitle] = useState("");
   const [position, setPosition] = useState(1); // Default to 1
+  const [loading, setLoading] = useState(false);
+  
 
   // Auto-fill position each time modal opens
   useEffect(() => {
@@ -24,17 +32,16 @@ export default function ModuleForm({ open, onOpenChange, onSubmit, course, modul
   }, [open, moduleCount]);
 
   const handleSubmit = async () => {
-    if (!title.trim() || !course) return;
+    if (!title.trim() || !courseId) return;
 
     const data = {
+      course: courseId,
       title: title.trim(),
-      position: Number(position),
-      course,
+      position: position,
     };
-
     try {
-      const response = await axiosInstance.post("/modules/", data);
-      onSubmit(response.data);
+      setLoading(true)
+      await axiosInstance.post("/modules/", data);
       onOpenChange(false);
     } catch (error) {
       console.error("Failed to create module:", error);
@@ -63,7 +70,6 @@ export default function ModuleForm({ open, onOpenChange, onSubmit, course, modul
             type="number"
             value={position}
             onChange={(e) => setPosition(e.target.value)}
-            // placeholder="e.g. 1"
           />
         </div>
 
@@ -71,7 +77,12 @@ export default function ModuleForm({ open, onOpenChange, onSubmit, course, modul
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit}>Create</Button>
+          <Button
+            disabled={!title.trim() || loading}
+            onClick={handleSubmit}
+          >
+            {loading ? "Saving..." : "Save"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
