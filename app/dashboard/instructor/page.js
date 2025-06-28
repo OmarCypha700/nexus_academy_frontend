@@ -96,7 +96,7 @@ export default function InstructorDashboard() {
   const fetchCourses = async () => {
     setLoading(true);
     try {
-      const response = await axiosInstance.get("/courses/");
+      const response = await axiosInstance.get("/instructor/courses/");
       setCourses(response.data.results || response.data);
       setError(null);
     } catch (err) {
@@ -119,7 +119,7 @@ export default function InstructorDashboard() {
     try {
       if (editMode && selectedCourse) {
         const res = await axiosInstance.put(
-          `/courses/${selectedCourse.id}/`,
+          `/instructor/courses/${selectedCourse.id}/`,
           courseData
         );
         setCourses(
@@ -127,7 +127,7 @@ export default function InstructorDashboard() {
         );
         setSuccess("Course updated successfully!");
       } else {
-        const res = await axiosInstance.post("/courses/", courseData);
+        const res = await axiosInstance.post("/instructor/courses/", courseData);
         setCourses((prev) => [...prev, res.data]);
         setSuccess("Course created successfully!");
       }
@@ -150,7 +150,7 @@ export default function InstructorDashboard() {
   const handleDeleteCourse = async (courseId) => {
     if (!confirm("Delete this course?")) return;
     try {
-      await axiosInstance.delete(`/courses/${courseId}/`);
+      await axiosInstance.delete(`/instructor/courses/${courseId}/`);
       setCourses(courses.filter((c) => c.id !== courseId));
       setSuccess("Course deleted successfully!");
     } catch (err) {
