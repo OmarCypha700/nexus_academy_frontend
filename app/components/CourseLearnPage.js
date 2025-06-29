@@ -14,7 +14,7 @@ import {
 import { Button } from "@/app/components/ui/button";
 import { Progress } from "@/app/components/ui/progress";
 import { Skeleton } from "@/app/components/ui/skeleton";
-import { Alert, AlertDescription } from "@/app/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/app/components/ui/alert";
 import { Separator } from "@/app/components/ui/separator";
 import { LessonContent } from "@/app/components/course/LessonContent";
 import { AdditionalResources } from "@/app/components/course/AdditionalResources";
