@@ -71,11 +71,38 @@ export default function CourseCard({
             ${course.price}
           </Badge>
         )}
-        <span className="text-xs text-muted-foreground">
-          {course.total_lessons > 0
-            ? `${course.total_lessons} lessons`
-            : "No lessons"}
-        </span>
+
+        {course.is_published == true ? (
+          <Badge
+            variant="outline"
+            className="bg-green-100 text-green-800 border-green-200"
+          >
+            Published
+          </Badge>
+        ) : (
+          <Badge
+            variant="outline"
+            className="bg-gray-300 text-muted-foreground border-gray-200"
+          >
+            Draft
+          </Badge>
+        )}
+
+         {course.total_lessons > 0 ? (
+          <Badge
+            variant="outline"
+            className="text-muted-foreground"
+          >
+            {course.total_lessons} lessons
+          </Badge>
+        ) : (
+          <Badge
+            variant="outline"
+            className="text-muted-foreground"
+          >
+            No lessons
+          </Badge>
+        )}
       </CardFooter>
     </Card>
   );

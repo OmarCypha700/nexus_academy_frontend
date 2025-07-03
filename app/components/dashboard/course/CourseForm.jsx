@@ -20,6 +20,7 @@ export default function CourseForm({
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
   const [introVideoId, setIntroVideoId] = useState("");
+  const [isPublished, setIsPublished] = useState(false);
 
   useEffect(() => {
     if (initialData) {
@@ -27,6 +28,7 @@ export default function CourseForm({
       setDescription(initialData.description || "");
       setPrice(initialData.price || "");
       setIntroVideoId(initialData.intro_video_id || "");
+      setIsPublished(initialData.is_published || false);
     }
   }, [initialData]);
 
@@ -37,6 +39,7 @@ export default function CourseForm({
       description,
       price,
       intro_video_id: introVideoId,
+      is_published: isPublished,
     };
     onSubmit(formData);
   };
@@ -98,6 +101,19 @@ export default function CourseForm({
           onChange={(e) => setIntroVideoId(e.target.value)}
         />
       </div>
+
+      {editMode && (
+        <div className="space-y-2 flex items-center gap-2">
+          <input
+            id="is_published"
+            type="checkbox"
+            checked={isPublished}
+            onChange={(e) => setIsPublished(e.target.checked)}
+            className="h-4 w-4"
+          />
+          <Label htmlFor="is_published">Publish Course</Label>
+        </div>
+      )}
 
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onCancel}>
