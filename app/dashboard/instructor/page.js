@@ -343,7 +343,7 @@ export default function InstructorDashboard() {
 
   return (
     <div className="container py-8">
-      <h1 className="text-3xl font-bold mb-8">Instructor Dashboard</h1>
+      {/* <h1 className="text-3xl font-bold mb-8">Instructor Dashboard</h1> */}
 
       {error && (
         <Alert variant="destructive" className="mb-4">

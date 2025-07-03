@@ -29,6 +29,7 @@ export default function Hero() {
             variant="outline"
             size="lg"
             className="w-full text-black sm:w-auto"
+            onClick={() => router.push("/signup/instructor")}
           >
             Become an Instructor
           </Button>

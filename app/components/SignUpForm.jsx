@@ -8,7 +8,7 @@ import { Button } from "@/app/components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
 
-export default function SignupPage() {
+export default function SignupForm() {
   const [formData, setFormData] = useState({
     username: "",
     email: "",
@@ -52,7 +52,7 @@ export default function SignupPage() {
          <Image
           src="/next.svg"
           alt="Signin illustration"
-          className="max-w-md"
+          className="w-3/4 max-w-md"
           width={500}
           height={500}
           priority
