@@ -36,12 +36,12 @@ export function AppSidebar() {
       icon: LayoutDashboard,
     },
     {
-      title: "Course Management",
+      title: "Courses",
       url: "/dashboard/instructor",
       icon: LibraryBig,
     },
     {
-      title: "Student Management",
+      title: "Students",
       url: "#",
       icon: UserCog,
     },

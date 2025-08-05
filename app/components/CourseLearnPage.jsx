@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo } from "react";
-import { useRouter, useSearchParams } from "next/navigation"; // Changed import
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import axiosInstance from "../lib/axios";
 import { ChevronLeftIcon, Menu, X } from "lucide-react";
@@ -16,21 +16,24 @@ import { Progress } from "@/app/components/ui/progress";
 import { Skeleton } from "@/app/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/app/components/ui/alert";
 import { Separator } from "@/app/components/ui/separator";
+import { toast } from "sonner";
+import { CourseSidebar } from "@/app/components/course/CourseSidebar";
+import { LessonHeader } from "@/app/components/course/LessonHeader";
+import { LessonFooter } from "@/app/components/course/LessonFooter";
 import { LessonContent } from "@/app/components/course/LessonContent";
 import { AdditionalResources } from "@/app/components/course/AdditionalResources";
-import { LessonHeader } from "@/app/components/course/LessonHeader";
-import { CourseSidebar } from "@/app/components/course/CourseSidebar";
 
 export default function CourseLearnPage({ courseId }) {
   const router = useRouter();
-  const searchParams = useSearchParams(); // Added for query params
+  const searchParams = useSearchParams();
   const [courseData, setCourseData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeLessonId, setActiveLessonId] = useState(null);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [activeModuleId, setActiveModuleId] = useState(null);
   const [selectedQuizId, setSelectedQuizId] = useState(null);
   const [selectedAssignmentId, setSelectedAssignmentId] = useState(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isDesktopSidebarVisible, setIsDesktopSidebarVisible] = useState(() => {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("desktopSidebarVisible");
@@ -46,91 +49,141 @@ export default function CourseLearnPage({ courseId }) {
     );
   }, [isDesktopSidebarVisible]);
 
-  const { currentLesson, currentCourseModule, currentQuiz } = useMemo(() => {
-    if (!courseData?.modules || !activeLessonId) {
+  const { currentLesson, currentCourseModule, currentQuiz, currentAssignment } =
+    useMemo(() => {
+      if (!courseData?.modules || !activeLessonId) {
+        return {
+          currentLesson: null,
+          currentCourseModule: null,
+          currentQuiz: null,
+          currentAssignment: null,
+        };
+      }
+      for (const courseModule of courseData.modules) {
+        if (!courseModule?.lessons) continue;
+        const lesson = courseModule.lessons.find(
+          (l) => l.id === activeLessonId
+        );
+        if (lesson) {
+          let quiz = null;
+          let assignment = null;
+          if (selectedQuizId && lesson.quizzes) {
+            quiz = lesson.quizzes.find((q) => q.id === selectedQuizId);
+          }
+          if (selectedAssignmentId && lesson.assignments) {
+            assignment = lesson.assignments.find(
+              (a) => a.id === selectedAssignmentId
+            );
+          }
+          return {
+            currentLesson: lesson,
+            currentCourseModule: courseModule,
+            currentQuiz: quiz,
+            currentAssignment: assignment,
+          };
+        }
+      }
       return {
         currentLesson: null,
         currentCourseModule: null,
         currentQuiz: null,
+        currentAssignment: null,
       };
-    }
-    for (const courseModule of courseData.modules) {
-      if (!courseModule?.lessons) continue;
-      const lesson = courseModule.lessons.find((l) => l.id === activeLessonId);
-      if (lesson) {
-        let quiz = null;
-        if (selectedQuizId && lesson.quizzes) {
-          quiz = lesson.quizzes.find((q) => q.id === selectedQuizId);
-        }
-        return {
-          currentLesson: lesson,
-          currentCourseModule: courseModule,
-          currentQuiz: quiz,
-        };
-      }
-    }
-    return {
-      currentLesson: null,
-      currentCourseModule: null,
-      currentQuiz: null,
-    };
-  }, [courseData, activeLessonId, selectedQuizId]);
+    }, [courseData, activeLessonId, selectedQuizId, selectedAssignmentId]);
 
   const progressInfo = useMemo(() => {
-    if (!courseData?.modules)
+    if (!courseData?.modules) {
       return { totalLessons: 0, completedCount: 0, progress: 0 };
+    }
     const totalLessons = courseData.modules.reduce(
       (total, courseModule) => total + (courseModule.lessons?.length || 0),
       0
     );
-    const completedCount = courseData.completed_lessons?.length || 0;
+    const completedCount = Array.isArray(courseData.completed_lessons)
+      ? courseData.completed_lessons.length
+      : 0;
     const progress = totalLessons
       ? Math.round((completedCount / totalLessons) * 100)
       : 0;
     return { totalLessons, completedCount, progress };
   }, [courseData]);
 
-  const fetchCourseData = useCallback(
-    async () => {
-      if (!courseId) {
-        setError("Course ID is missing");
-        setLoading(false);
-        return;
+  const fetchCourseData = useCallback(async () => {
+    if (!courseId) {
+      setError("Course ID is missing");
+      setLoading(false);
+      return;
+    }
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await axiosInstance.get(
+        `/enrollments/course/${courseId}/`
+      );
+      const data = response.data;
+      console.log("Fetched Course Data:", data);
+      const processedData = {
+        ...data,
+        completed_lessons: Array.isArray(data.completed_lessons)
+          ? data.completed_lessons
+          : [],
+        modules:
+          data.modules?.length > 0
+            ? data.modules.map((module) => ({
+                ...module,
+                lessons:
+                  module.lessons?.map((lesson) => ({
+                    ...lesson,
+                    contents: lesson.contents || [],
+                    quizzes: lesson.quizzes || [],
+                    assignments: lesson.assignments || [],
+                    resources: lesson.resources || [],
+                    completed: Array.isArray(data.completed_lessons)
+                      ? data.completed_lessons.includes(lesson.id)
+                      : false,
+                  })) || [],
+              }))
+            : [{ id: 1, title: "Course Content", lessons: [] }],
+      };
+      setCourseData(processedData);
+      const quizId = searchParams.get("quizId");
+      const assignmentId = searchParams.get("assignmentId");
+      const lessonId = searchParams.get("lessonId");
+      if (quizId && lessonId) {
+        setActiveLessonId(parseInt(lessonId));
+        setSelectedQuizId(parseInt(quizId));
+        setSelectedAssignmentId(null);
+      } else if (assignmentId && lessonId) {
+        setActiveLessonId(parseInt(lessonId));
+        setSelectedAssignmentId(parseInt(assignmentId));
+        setSelectedQuizId(null);
+      } else if (processedData.modules?.[0]?.lessons?.length > 0) {
+        const firstModule = processedData.modules[0];
+        const firstLesson = firstModule.lessons[0];
+        setActiveModuleId(firstModule.id);
+        setActiveLessonId(firstLesson.id);
+        setSelectedQuizId(null);
+        setSelectedAssignmentId(null);
+      } else {
+        setActiveLessonId(null);
+        setActiveModuleId(null);
+        setSelectedQuizId(null);
+        setSelectedAssignmentId(null);
       }
-      try {
-        setLoading(true);
-        setError(null);
-        const response = await axiosInstance.get(`/enrollments/course/${courseId}/`);
-        const data = response.data;
-        console.log("Course data fetched:", data);
-        const processedData = {
-          ...data,
-          modules:
-            data.modules?.length > 0
-              ? data.modules
-              : [{ id: 1, title: "Course Content", lessons: [] }],
-        };
-        setCourseData(processedData);
-
-        // Handle query parameters
-        const quizId = searchParams.get("quizId");
-        const lessonId = searchParams.get("lessonId");
-        if (quizId && lessonId) {
-          setActiveLessonId(parseInt(lessonId));
-          setSelectedQuizId(parseInt(quizId));
-        } else if (processedData.modules?.[0]?.lessons?.length > 0) {
-          const firstLesson = processedData.modules[0].lessons[0];
-          setActiveLessonId(firstLesson.id);
-        }
-      } catch (error) {
-        console.error("Error fetching course:", error);
-        setError(error.message);
-      } finally {
-        setLoading(false);
-      }
-    },
-    [courseId, searchParams]
-  );
+    } catch (error) {
+      console.error("Error fetching course:", error);
+      setError(error.response?.data?.detail || "Failed to load course data.");
+      toast({
+        title: "Error",
+        description: "Failed to load course data.",
+        variant: "destructive",
+        duration: 5000,
+      });
+      router.push("/dashboard/user");
+    } finally {
+      setLoading(false);
+    }
+  }, [courseId, searchParams, router]);
 
   const markLessonComplete = useCallback(
     async (lessonId) => {
@@ -141,7 +194,9 @@ export default function CourseLearnPage({ courseId }) {
         });
         setCourseData((prev) => {
           if (!prev) return null;
-          const newCompletedLessons = [...(prev.completed_lessons || [])];
+          const newCompletedLessons = Array.isArray(prev.completed_lessons)
+            ? [...prev.completed_lessons]
+            : [];
           if (!newCompletedLessons.includes(lessonId)) {
             newCompletedLessons.push(lessonId);
           }
@@ -156,8 +211,19 @@ export default function CourseLearnPage({ courseId }) {
             })),
           };
         });
+        toast({
+          title: "Lesson Completed",
+          description: "Your progress has been updated.",
+          duration: 3000,
+        });
       } catch (error) {
         console.error("Error marking lesson complete:", error);
+        toast({
+          title: "Error",
+          description: "Failed to mark lesson as complete.",
+          variant: "destructive",
+          duration: 5000,
+        });
       }
     },
     [courseId]
@@ -166,19 +232,45 @@ export default function CourseLearnPage({ courseId }) {
   const markQuizComplete = useCallback(
     async (quizId) => {
       try {
-        setCourseData((prev) => {
-          if (!prev) return null;
-          const newCompletedLessons = [...(prev.completed_lessons || [])];
-          if (!newCompletedLessons.includes(`quiz-${quizId}`)) {
-            newCompletedLessons.push(`quiz-${quizId}`);
-          }
-          return { ...prev, completed_lessons: newCompletedLessons };
-        });
+        const lessonId = currentLesson?.id;
+        if (lessonId && !courseData.completed_lessons?.includes(lessonId)) {
+          await axiosInstance.post("/enrollments/complete-lesson/", {
+            course_id: courseId,
+            lesson_id: lessonId,
+          });
+          setCourseData((prev) => {
+            if (!prev) return null;
+            const newCompletedLessons = Array.isArray(prev.completed_lessons)
+              ? [...prev.completed_lessons]
+              : [];
+            if (!newCompletedLessons.includes(lessonId)) {
+              newCompletedLessons.push(lessonId);
+            }
+            return {
+              ...prev,
+              completed_lessons: newCompletedLessons,
+              modules: prev.modules.map((courseModule) => ({
+                ...courseModule,
+                lessons: courseModule.lessons.map((lesson) =>
+                  lesson.id === lessonId
+                    ? { ...lesson, completed: true }
+                    : lesson
+                ),
+              })),
+            };
+          });
+        }
       } catch (error) {
         console.error("Error marking quiz complete:", error);
+        toast({
+          title: "Error",
+          description: "Failed to update quiz progress.",
+          variant: "destructive",
+          duration: 5000,
+        });
       }
     },
-    []
+    [courseId, currentLesson]
   );
 
   const findAdjacentLesson = useCallback(
@@ -206,21 +298,26 @@ export default function CourseLearnPage({ courseId }) {
   const navigateToNextLesson = useCallback(() => {
     const nextLesson = findAdjacentLesson("next");
     if (nextLesson) {
+      setActiveModuleId(nextLesson.moduleId);
       setActiveLessonId(nextLesson.id);
       setSelectedQuizId(null);
+      setSelectedAssignmentId(null);
     }
   }, [findAdjacentLesson]);
 
   const navigateToPreviousLesson = useCallback(() => {
     const prevLesson = findAdjacentLesson("prev");
     if (prevLesson) {
+      setActiveModuleId(prevLesson.moduleId);
       setActiveLessonId(prevLesson.id);
       setSelectedQuizId(null);
+      setSelectedAssignmentId(null);
     }
   }, [findAdjacentLesson]);
 
   const navigateToLesson = useCallback(
     (moduleId, lessonId, quizId = null, assignmentId = null) => {
+      setActiveModuleId(moduleId);
       setActiveLessonId(lessonId);
       setSelectedQuizId(quizId);
       setSelectedAssignmentId(assignmentId);
@@ -229,12 +326,20 @@ export default function CourseLearnPage({ courseId }) {
     []
   );
 
-  const navigateToQuiz = useCallback(
-    (moduleId, lessonId, quizId) => {
-      console.log("Navigating to quiz:", { moduleId, lessonId, quizId });
+  const navigateToQuiz = useCallback((moduleId, lessonId, quizId) => {
+    setActiveModuleId(moduleId);
+    setActiveLessonId(lessonId);
+    setSelectedQuizId(quizId);
+    setSelectedAssignmentId(null);
+    setSidebarOpen(false);
+  }, []);
+
+  const navigateToAssignment = useCallback(
+    (moduleId, lessonId, assignmentId) => {
+      setActiveModuleId(moduleId);
       setActiveLessonId(lessonId);
-      setSelectedQuizId(quizId);
-      setSelectedAssignmentId(null);
+      setSelectedQuizId(null);
+      setSelectedAssignmentId(assignmentId);
       setSidebarOpen(false);
     },
     []
@@ -261,8 +366,8 @@ export default function CourseLearnPage({ courseId }) {
       <Alert>
         <AlertTitle>Course content is being prepared</AlertTitle>
         <AlertDescription>
-          This course doesn&apos;t have any modules or lessons available yet. Please
-          check back later.
+          This course doesn&apos;t have any modules or lessons available yet.
+          Please check back later.
         </AlertDescription>
       </Alert>
       <Card>
@@ -273,7 +378,7 @@ export default function CourseLearnPage({ courseId }) {
           <div className="space-y-2 text-sm sm:text-base">
             <p>
               <strong>Instructor:</strong>{" "}
-              {courseData?.instructor || "Not specified"}
+              {courseData?.instructor_details?.name || "Not specified"}
             </p>
             <p>
               <strong>Duration:</strong> {courseData?.duration || 0} hours
@@ -381,18 +486,28 @@ export default function CourseLearnPage({ courseId }) {
             </div>
           )}
         </div>
-        <div className="flex flex-col md:flex-row">
-          {hasContent && isDesktopSidebarVisible && (
-            <div className="hidden md:block w-64 lg:w-80 flex-shrink-0 transition-all duration-300">
+        <div className="flex flex-col md:flex-row gap-4 md:gap-6">
+          {hasContent && (
+            <div
+              className={`md:${
+                isDesktopSidebarVisible ? "block" : "hidden"
+              } w-full md:w-64 lg:w-80 flex-shrink-0 transition-all duration-300 fixed md:sticky top-0 left-0 h-full md:h-[calc(100vh-64px)] bg-white border-r border-gray-200 z-50 md:z-auto ${
+                sidebarOpen
+                  ? "translate-x-0"
+                  : "-translate-x-full md:translate-x-0"
+              }`}
+            >
               <CourseSidebar
                 course={courseData}
                 progress={progressInfo.progress}
                 currentModule={currentCourseModule || {}}
                 currentLesson={currentLesson || {}}
                 currentQuiz={currentQuiz}
+                currentAssignment={currentAssignment}
                 completedLessons={courseData.completed_lessons || []}
                 navigateToLesson={navigateToLesson}
                 navigateToQuiz={navigateToQuiz}
+                navigateToAssignment={navigateToAssignment}
                 totalLessons={progressInfo.totalLessons}
                 completedCount={progressInfo.completedCount}
                 sidebarOpen={sidebarOpen}
@@ -400,26 +515,47 @@ export default function CourseLearnPage({ courseId }) {
               />
             </div>
           )}
-          <div
-            className={`flex-1 ${
-              hasContent && isDesktopSidebarVisible ? "md:ml-4 lg:ml-6" : ""
-            } p-2 sm:p-4 md:p-0`}
-          >
-            <div className="mb-4 md:mb-6">
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800">
-                {courseData.title}
-              </h1>
-              <p className="text-xs sm:text-sm text-gray-600 mt-1">
-                {courseData.instructor && `Instructor: ${courseData.instructor} · `}
-                Progress: {progressInfo.progress}%
-              </p>
-              <Progress value={progressInfo.progress} className="h-2 mt-2" />
-            </div>
-            <Card className="mb-4 md:mb-6 shadow-sm">
-              <CardContent className="p-3 sm:p-4 md:p-6">
-                {currentLesson && currentCourseModule ? (
-                  <div className="space-y-4 md:space-y-6">
+          <div className="flex-1 space-y-4 sm:space-y-6 px-2">
+            {hasContent && currentLesson && currentCourseModule ? (
+              <>
+                <Progress
+                  value={progressInfo.progress}
+                  className="w-full h-2"
+                />
+                <Card className="shadow-sm">
+                  <CardHeader>
+                    <CardTitle className="text-lg sm:text-xl">
+                      {currentCourseModule?.title || "Course Content"}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4 sm:space-y-6">
                     <LessonHeader
+                      lesson={currentLesson}
+                      currentModule={currentCourseModule}
+                      course={courseData}
+                      completedLessons={courseData.completed_lessons || []}
+                      onComplete={() => markLessonComplete(currentLesson.id)}
+                      onNext={navigateToNextLesson}
+                      onPrevious={navigateToPreviousLesson}
+                      hasNext={!!findAdjacentLesson("next")}
+                      hasPrevious={!!findAdjacentLesson("prev")}
+                      isCompleted={currentLesson.completed}
+                    />
+                    <LessonContent
+                      lesson={currentLesson}
+                      selectedQuiz={currentQuiz}
+                      selectedAssignment={currentAssignment}
+                      onQuizComplete={markQuizComplete}
+                    />
+                    {currentLesson.resources?.length > 0 && (
+                      <>
+                        <Separator className="my-4 bg-gray-200" />
+                        <AdditionalResources
+                          resources={currentLesson.resources}
+                        />
+                      </>
+                    )}
+                    <LessonFooter
                       currentModule={currentCourseModule}
                       currentLesson={currentLesson}
                       completedLessons={courseData.completed_lessons || []}
@@ -428,48 +564,12 @@ export default function CourseLearnPage({ courseId }) {
                       markLessonComplete={markLessonComplete}
                       course={courseData}
                     />
-                    <Separator />
-                    <LessonContent
-                      currentLesson={
-                        currentQuiz
-                          ? null
-                          : {
-                              ...currentLesson,
-                              video_id: currentLesson.video_id || "",
-                              content_html:
-                                currentLesson.content_html ||
-                                currentLesson.content ||
-                                "<p>No content available for this lesson.</p>",
-                            }
-                      }
-                      currentQuiz={currentQuiz}
-                      onCompleteLesson={markLessonComplete}
-                      onCompleteQuiz={markQuizComplete}
-                    />
-                    {!currentQuiz && currentLesson.resources?.length > 0 && (
-                      <>
-                        <Separator />
-                        <AdditionalResources resources={currentLesson.resources} />
-                      </>
-                    )}
-                    {selectedAssignmentId && (
-                      <div className="mt-6">
-                        <h3 className="text-lg font-medium mb-4">Assignment</h3>
-                        <Alert>
-                          <AlertTitle>Assignment content</AlertTitle>
-                          <AlertDescription>
-                            Assignment component for ID: {selectedAssignmentId} would be
-                            rendered here.
-                          </AlertDescription>
-                        </Alert>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <EmptyCourseContent />
-                )}
-              </CardContent>
-            </Card>
+                  </CardContent>
+                </Card>
+              </>
+            ) : (
+              <EmptyCourseContent />
+            )}
           </div>
         </div>
       </div>

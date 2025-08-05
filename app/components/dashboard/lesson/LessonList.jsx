@@ -20,7 +20,7 @@ export default function LessonList({
   onRenameModule,
   onReorderModule,
   setAddModuleOpen,
-  onDeleteModule = { onDeleteModule },
+  onDeleteModule,
 }) {
   const hasLessons = modules?.some((mod) => mod.lessons?.length > 0);
 
@@ -34,16 +34,6 @@ export default function LessonList({
               You must add at least one module before creating lessons.
             </p>
           )}
-          {/* <Button
-            variant="outline"
-            size="sm"
-            className="gap-1"
-            onClick={onAddLesson}
-            disabled={modules.length === 0}
-          >
-            <Plus size={16} /> Add Lesson
-          </Button> */}
-
           <Button
             variant="outline"
             size="sm"
@@ -73,6 +63,7 @@ export default function LessonList({
                     size="sm"
                     title="Add lesson to this module"
                     onClick={() => onAddLessonToModule(module.id)}
+                    disabled={modules.length === 0}
                   >
                     <Plus size={14} />
                   </Button>
@@ -152,14 +143,11 @@ export default function LessonList({
           <CardContent className="flex flex-col items-center justify-center py-8">
             <p className="text-muted-foreground mb-4">No lessons added yet</p>
             {modules.length === 0 && (
-            <p className="text-xs text-muted-foreground italic">
-              You must add at least one module before creating lessons.
-            </p>
-          )}
-            <Button 
-            onClick={onAddLesson}
-            disabled={modules.length === 0}
-            >
+              <p className="text-xs text-muted-foreground italic">
+                You must add at least one module before creating lessons.
+              </p>
+            )}
+            <Button onClick={onAddLesson} disabled={modules.length === 0}>
               <Plus size={16} className="mr-1" /> Create First Lesson
             </Button>
           </CardContent>
