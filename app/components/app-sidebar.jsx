@@ -37,12 +37,12 @@ export function AppSidebar() {
     },
     {
       title: "Courses",
-      url: "/dashboard/instructor",
+      url: "/dashboard/instructor/courses",
       icon: LibraryBig,
     },
     {
       title: "Students",
-      url: "#",
+      url: "/dashboard/instructor/students",
       icon: UserCog,
     },
     {

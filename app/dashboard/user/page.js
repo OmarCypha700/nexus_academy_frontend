@@ -71,6 +71,7 @@ export default function DashboardPage() {
     const fetchDashboard = async () => {
       try {
         const res = await axios.get("/user-dashboard/");
+        console.log(res.data);
         setDashboardData(res.data);
       } catch (err) {
         console.error("Dashboard error:", err);
