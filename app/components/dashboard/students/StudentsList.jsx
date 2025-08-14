@@ -1,4 +1,3 @@
-// components/dashboard/students/StudentsList.jsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -13,6 +12,11 @@ export default function StudentsList({ courseId }) {
 
   useEffect(() => {
     const fetchStudents = async () => {
+      if (!courseId) {
+        setStudents([]);
+        setLoading(false);
+        return;
+      }
       setLoading(true);
       setError(null);
       try {
@@ -34,11 +38,25 @@ export default function StudentsList({ courseId }) {
     fetchStudents();
   }, [courseId]);
 
-  if (loading) return(
-  <div className="flex justify-center items-center py-12">
-    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-  </div>);
-  if (error) return <p className="text-red-500">{error}</p>;
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    );
+  }
+
+  if (error) return <p className="text-red-500 text-center py-12">{error}</p>;
+
+  if (students.length === 0) {
+    return (
+      <div className="w-[72vw] border border-solid border-gray-400 rounded-lg overflow-x-auto whitespace-nowrap scrollbar-thin scrollbar-thumb-gray-400">
+        <div className="text-center py-12 text-muted-foreground text-sm md:text-base">
+          No students enrolled
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-[72vw] border border-solid border-gray-400 rounded-lg overflow-x-auto whitespace-nowrap scrollbar-thin scrollbar-thumb-gray-400">

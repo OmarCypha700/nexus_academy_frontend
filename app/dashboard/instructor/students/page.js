@@ -1,4 +1,3 @@
-// app/dashboard/students/page.jsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -62,7 +61,17 @@ export default function InstructorDashboardStudents() {
     );
   }
 
-  if (error) return <p className="text-red-500">{error}</p>;
+  if (error) return <p className="text-red-500 text-center py-12">{error}</p>;
+
+  if (courses.length === 0) {
+    return (
+      <div className="space-y-6 p-6">
+        <div className="text-center py-12 text-muted-foreground text-sm md:text-base">
+          No courses available
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 p-6">
