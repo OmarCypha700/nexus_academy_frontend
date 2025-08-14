@@ -32,7 +32,7 @@ export function AppSidebar() {
   const items = [
     {
       title: "Dashboard",
-      url: "#",
+      url: "/dashboard/instructor/overview",
       icon: LayoutDashboard,
     },
     {

@@ -23,7 +23,7 @@ export default function Navbar() {
   }, [user]);
 
   const dashboardPath =
-    user?.role === "instructor" ? "/dashboard/instructor/courses" : "/dashboard/user";
+    user?.role === "instructor" ? "/dashboard/instructor/overview" : "/dashboard/user";
 
   const navLinks = [
     { name: "Dashboard", path: dashboardPath },

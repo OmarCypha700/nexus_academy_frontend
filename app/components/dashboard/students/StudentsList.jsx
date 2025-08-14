@@ -16,13 +16,17 @@ export default function StudentsList({ courseId }) {
       setLoading(true);
       setError(null);
       try {
-        const response = await axiosInstance.get(`/instructor/courses/${courseId}/students/`);
+        const response = await axiosInstance.get(
+          `/instructor/courses/${courseId}/students/`
+        );
         const data = response.data.results || response.data;
         console.log("Student data:", data); // Debug the API response
         setStudents(data);
       } catch (error) {
         console.error("Error fetching students:", error);
-        setError("Failed to load students. Please check your connection or try again later.");
+        setError(
+          "Failed to load students. Please check your connection or try again later."
+        );
       } finally {
         setLoading(false);
       }
@@ -30,8 +34,15 @@ export default function StudentsList({ courseId }) {
     fetchStudents();
   }, [courseId]);
 
-  if (loading) return <p>Loading...</p>;
+  if (loading) return(
+  <div className="flex justify-center items-center py-12">
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+  </div>);
   if (error) return <p className="text-red-500">{error}</p>;
 
-  return <DataTable columns={columns} data={students} />;
+  return (
+    <div className="w-[72vw] border border-solid border-gray-400 rounded-lg overflow-x-auto whitespace-nowrap scrollbar-thin scrollbar-thumb-gray-400">
+      <DataTable columns={columns} data={students} />
+    </div>
+  );
 }

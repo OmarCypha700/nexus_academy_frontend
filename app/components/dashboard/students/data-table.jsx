@@ -1,4 +1,3 @@
-// app/components/dashboard/students/data-table.jsx
 "use client";
 
 import * as React from "react";
@@ -24,6 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/app/components/ui/select";
+import { ChevronDownIcon } from "lucide-react";
 
 const DataTable = React.forwardRef(({ columns, data }, ref) => {
   const [pageSize, setPageSize] = React.useState(10);
@@ -69,7 +69,7 @@ const DataTable = React.forwardRef(({ columns, data }, ref) => {
         />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button className="w-full md:w-auto">Columns</Button>
+            <Button className="w-full md:w-auto">Columns <ChevronDownIcon /></Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
             {table
@@ -81,19 +81,22 @@ const DataTable = React.forwardRef(({ columns, data }, ref) => {
                   checked={column.getIsVisible()}
                   onCheckedChange={(value) => column.toggleVisibility(!!value)}
                 >
-                  {column.id}
+                  {column.columnDef.meta?.displayName || column.id}
                 </DropdownMenuCheckboxItem>
               ))}
           </DropdownMenuContent>
         </DropdownMenu>
+        <span className="text-xs md:text-sm text-muted-foreground text-center md:text-left">
+          Total Rows: {data?.length || 0}
+        </span>
       </div>
-      <div className="relative overflow-x-auto rounded-lg border">
+      <div>
         <Table className="min-w-[800px]">
-          <TableHeader className="bg-muted sticky top-0 z-10">
+          <TableHeader className="bg-black sticky top-0 z-10">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id} className="text-xs md:text-sm whitespace-nowrap px-2 lg:px-4">
+                  <TableHead key={header.id} className="text-white text-xs md:text-sm whitespace-nowrap px-2 lg:px-4">
                     {header.isPlaceholder
                       ? null
                       : flexRender(header.column.columnDef.header, header.getContext())}
@@ -105,7 +108,7 @@ const DataTable = React.forwardRef(({ columns, data }, ref) => {
           <TableBody className="**:data-[slot=table-cell]:first:w-8">
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id} className="hover:bg-gray-100">
+                <TableRow key={row.id} className="bg-gray-100 hover:bg-gray-300">
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id} className="text-xs md:text-sm py-2 md:py-3 whitespace-nowrap px-2 lg:px-4">
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}

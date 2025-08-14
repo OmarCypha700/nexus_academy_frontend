@@ -10,7 +10,7 @@ export default function HomePage() {
     <main>
       <Hero />
       <Features />
-      <Categories />
+      {/* <Categories /> */}
       <Testimonials />
       <Faq />
       <Newsletter />

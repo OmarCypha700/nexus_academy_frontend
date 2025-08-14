@@ -11,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/app/components/ui/select";
+import { Skeleton } from "@/app/components/ui/skeleton";
 import axiosInstance from "@/app/lib/axios";
 
 export default function InstructorDashboardStudents() {
@@ -37,14 +38,36 @@ export default function InstructorDashboardStudents() {
     fetchCourses();
   }, []);
 
-  if (loading) return <p>Loading...</p>;
+  if (loading) {
+    return (
+      <div className="space-y-6 p-6">
+        <div className="flex flex-col justify-even items-start gap-4">
+          <div className="flex flex-wrap justify-between items-center space-x-2 w-full">
+            <Skeleton className="h-10 w-[200px]" />
+            <Skeleton className="h-10 w-24" />
+          </div>
+        </div>
+        <div>
+          <StudentsList courseId={null} />
+        </div>
+        <div className="mt-4">
+          <Skeleton className="h-6 w-48 mb-2" />
+          <Skeleton className="h-40 w-full" />
+        </div>
+        <div>
+          <Skeleton className="h-6 w-48 mb-2" />
+          <Skeleton className="h-40 w-full" />
+        </div>
+      </div>
+    );
+  }
+
   if (error) return <p className="text-red-500">{error}</p>;
 
   return (
     <div className="space-y-6 p-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">Students</h2>
-        <div className="flex justify-between items-center space-x-2">
+      <div className="flex flex-col justify-even items-start gap-4">
+        <div className="flex flex-wrap justify-between items-center space-x-2">
           <Select
             value={selectedCourseId}
             onValueChange={setSelectedCourseId}
@@ -65,7 +88,9 @@ export default function InstructorDashboardStudents() {
           </Button>
         </div>
       </div>
-      {selectedCourseId && <StudentsList courseId={selectedCourseId} />}
+      <div>
+        {selectedCourseId && <StudentsList courseId={selectedCourseId} />}
+      </div>
       <div className="mt-4">
         <h3>Course Progress Overview</h3>
         <p>Chart placeholder (implement with canvas panel)</p>
