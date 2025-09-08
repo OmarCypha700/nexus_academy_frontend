@@ -11,11 +11,10 @@ export default function Hero() {
       <div className="max-w-5xl mx-auto">
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight">
           Learn Anytime, Anywhere with{" "}
-          <span className="text-yellow-300">Nexus Academy</span>
+          <span className="text-yellow-300">Young Coders GH</span>
         </h1>
         <p className="mt-4 sm:mt-6 text-base sm:text-lg text-gray-200">
-          Unlimited access to video lessons and notes for JHS, SHS, and
-          Tertiary.
+          Unlimited access to video lessons for young individuals
         </p>
         <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
           <Button

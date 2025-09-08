@@ -28,7 +28,7 @@ export default function Navbar() {
   const navLinks = [
     { name: "Dashboard", path: dashboardPath },
     { name: "Courses", path: "/courses" },
-    { name: "Pricing", path: "/prices" },
+    // { name: "Community", path: "/community" },
   ];
 
   const isActive = (path) => pathname.startsWith(path);
@@ -47,7 +47,7 @@ export default function Navbar() {
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2">
             <GraduationCap className="w-6 h-6 text-black" />
-            <span className="text-xl font-bold text-gray-900">Nexus Academy</span>
+            <span className="text-xl font-bold text-gray-900">Young Coders GH</span>
           </Link>
 
           {/* Desktop Menu */}

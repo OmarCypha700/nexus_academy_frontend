@@ -11,7 +11,7 @@ export default function Features() {
   return (
     <section className="w-full py-14 bg-gray-100 px-4">
       <div className="max-w-6xl mx-auto text-center">
-        <h2 className="text-2xl sm:text-3xl font-semibold mb-10">Why Choose Nexus Academy?</h2>
+        <h2 className="text-2xl sm:text-3xl font-semibold mb-10">Why Choose Young Coders?</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
           {features.map((f, i) => (
             <div key={i} className="bg-white rounded-2xl shadow p-5 sm:p-6">

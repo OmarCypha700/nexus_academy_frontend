@@ -62,7 +62,7 @@ export default function LoginForm() {
             Welcome Back
           </h2>
           <p className="text-sm text-center text-gray-600">
-            Login to your Nexus Academy account
+            Login to your Young Coders account
           </p>
 
           {error && (
