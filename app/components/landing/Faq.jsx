@@ -46,7 +46,7 @@ export default function FAQ() {
               Are the courses free?
             </AccordionTrigger>
             <AccordionContent>
-              We offer some free introductory courses to help you get started. To unlock full access to advanced lessons, projects, and mentorship, you’ll need a subscription.
+              We offer some free introductory courses to help you get started. To unlock full access to advanced lessons, projects, and mentorship, you will need a subscription.
             </AccordionContent>
           </AccordionItem>
 
