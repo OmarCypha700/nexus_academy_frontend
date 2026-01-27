@@ -28,7 +28,7 @@ export default function Navbar() {
   const navLinks = [
     { name: "Dashboard", path: dashboardPath },
     { name: "Courses", path: "/courses" },
-    { name: "Pricing", path: "/prices" },
+    // { name: "Pricing", path: "/prices" },
   ];
 
   const isActive = (path) => pathname.startsWith(path);
