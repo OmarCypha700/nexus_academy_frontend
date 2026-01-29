@@ -14,8 +14,7 @@ export default function Hero() {
           <span className="text-yellow-300">Nexus Academy</span>
         </h1>
         <p className="mt-4 sm:mt-6 text-base sm:text-lg text-gray-200">
-          Unlimited access to video lessons and notes for JHS, SHS, and
-          Tertiary.
+          Unlimited access to lessons and resources.
         </p>
         <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
           <Button
