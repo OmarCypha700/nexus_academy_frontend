@@ -1,5 +1,13 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@plugin "@tailwindcss/typography";
+
+/* Typography's default link color blends into body text — rich-text links (editor +
+   rendered lesson/course/quiz/assignment/resource content) need to visibly read as links. */
+.prose a {
+  color: #2563eb !important;
+  text-decoration: underline !important;
+}
 
 @custom-variant dark (&:is(.dark *));
 

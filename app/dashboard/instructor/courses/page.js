@@ -21,6 +21,7 @@ import {
   DialogFooter,
 } from "@/app/components/ui/dialog";
 import { Alert, AlertDescription } from "@/app/components/ui/alert";
+import { Skeleton } from "@/app/components/ui/skeleton";
 
 // Custom components
 import CourseCard from "@/app/components/dashboard/course/CourseCard";
@@ -32,6 +33,7 @@ import ModuleForm from "@/app/components/dashboard/module/ModuleForm";
 import QuizForm from "@/app/components/dashboard/quiz/QuizForm";
 import QuestionForm from "@/app/components/dashboard/quiz/QuestionForm";
 import CourseOutcomeForm from "@/app/components/dashboard/course/CourseOutcomeForm";
+import AssignmentForm from "@/app/components/dashboard/assignment/AssignmentForm";
 
 export default function InstructorDashboardCourses() {
   const [courses, setCourses] = useState([]);
@@ -49,6 +51,8 @@ export default function InstructorDashboardCourses() {
   const [quizFormData, setQuizFormData] = useState(null);
   const [questionFormData, setQuestionFormData] = useState(null);
   const [selectedQuizId, setSelectedQuizId] = useState(null);
+  const [assignmentModalOpen, setAssignmentModalOpen] = useState(false);
+  const [assignmentFormData, setAssignmentFormData] = useState(null);
   const [outcomeModalOpen, setOutcomeModalOpen] = useState(false);
   const [outcomes, setOutcomes] = useState([]);
 
@@ -160,7 +164,11 @@ export default function InstructorDashboardCourses() {
 
   const openCourseDetails = async (course) => {
     try {
-      const response = await axiosInstance.get(`/courses/${course.id}/`);
+      // `/courses/{id}/` is the public detail endpoint and only returns published courses
+      // (PublicCourseDetailView filters on is_published=True) — it 404s for a draft, which
+      // made it look like instructors couldn't add modules/lessons until publishing. The
+      // instructor endpoint has no such filter, just an ownership check.
+      const response = await axiosInstance.get(`/instructor/courses/${course.id}/`);
       setSelectedCourse(response.data);
       setDetailsOpen(true);
     } catch (err) {
@@ -336,6 +344,13 @@ export default function InstructorDashboardCourses() {
 
   return (
     <div className="container py-8">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">Courses</h1>
+        <p className="text-sm text-muted-foreground">
+          Create and manage your courses, lessons, quizzes, and assignments.
+        </p>
+      </div>
+
       {error && (
         <Alert variant="destructive" className="mb-4">
           <AlertDescription>{error}</AlertDescription>
@@ -349,8 +364,12 @@ export default function InstructorDashboardCourses() {
       )}
 
       {loading ? (
-        <div className="flex justify-center items-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {Array(3)
+            .fill()
+            .map((_, i) => (
+              <Skeleton key={i} className="h-40 w-full rounded-xl" />
+            ))}
         </div>
       ) : courses.length === 0 ? (
         <Card className="w-full">
@@ -459,6 +478,10 @@ export default function InstructorDashboardCourses() {
                   setQuestionFormData(question);
                   setQuestionModalOpen(true);
                 }}
+                openAssignmentModal={(assignment) => {
+                  setAssignmentFormData(assignment);
+                  setAssignmentModalOpen(true);
+                }}
                 onClose={() => setDetailsOpen(false)}
               />
             </DialogContent>
@@ -538,6 +561,47 @@ export default function InstructorDashboardCourses() {
                 onCancel={() => {
                   setQuizModalOpen(false);
                   setQuizFormData(null);
+                }}
+              />
+            </DialogContent>
+          </Dialog>
+
+          {/* Assignment Modal */}
+          <Dialog open={assignmentModalOpen} onOpenChange={setAssignmentModalOpen}>
+            <DialogContent className="max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>
+                  {assignmentFormData?.id ? "Edit Assignment" : "Create Assignment"}
+                </DialogTitle>
+              </DialogHeader>
+              <AssignmentForm
+                courseId={selectedCourse?.id}
+                assignment={assignmentFormData}
+                onSubmit={async (data) => {
+                  try {
+                    const payload = { ...data, lesson: parseInt(data.lesson) };
+                    if (assignmentFormData?.id) {
+                      await axiosInstance.put(
+                        `/assignments/${assignmentFormData.id}/`,
+                        payload
+                      );
+                      setSuccess("Assignment updated successfully!");
+                    } else {
+                      await axiosInstance.post("/assignments/", payload);
+                      setSuccess("Assignment created successfully!");
+                    }
+                    setAssignmentModalOpen(false);
+                    setAssignmentFormData(null);
+                    await openCourseDetails(selectedCourse);
+                  } catch (err) {
+                    setError(
+                      err.response?.data?.detail || "Failed to save assignment"
+                    );
+                  }
+                }}
+                onCancel={() => {
+                  setAssignmentModalOpen(false);
+                  setAssignmentFormData(null);
                 }}
               />
             </DialogContent>

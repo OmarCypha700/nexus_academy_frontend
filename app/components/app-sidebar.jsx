@@ -7,8 +7,6 @@ import {
   UserCog,
   LayoutDashboard,
   LibraryBig,
-  Search,
-  Settings,
 } from "lucide-react";
 
 import {
@@ -45,16 +43,6 @@ export function AppSidebar() {
       url: "/dashboard/instructor/students",
       icon: UserCog,
     },
-    {
-      title: "Search",
-      url: "#",
-      icon: Search,
-    },
-    {
-      title: "Settings",
-      url: "#",
-      icon: Settings,
-    },
   ];
   const pathname = usePathname();
   const isActive = (path) => pathname.startsWith(path);
@@ -74,16 +62,13 @@ export function AppSidebar() {
                       className={clsx(
                         "flex items-center gap-2",
                         isActive(item.url)
-                          ? "bg-black text-white"
+                          ? "bg-primary text-primary-foreground"
                           : ""
                       )}
                     >
                       <Tooltip>
                         <TooltipTrigger>
-                          <item.icon
-                            size={20}
-                            color={clsx(isActive(item.url) ? "white" : "black")}
-                          />
+                          <item.icon size={20} />
                         </TooltipTrigger>
                         <TooltipContent>
                           <p>{item.title}</p>

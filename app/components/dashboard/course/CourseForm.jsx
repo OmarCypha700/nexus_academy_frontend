@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
-import { Textarea } from "@/app/components/ui/textarea";
+import { RichTextEditor } from "@/app/components/ui/rich-text-editor";
 import { Label } from "@/app/components/ui/label";
 import { Alert, AlertDescription } from "@/app/components/ui/alert";
 import { DialogFooter } from "@/app/components/ui/dialog";
@@ -171,13 +171,10 @@ export default function CourseForm({
 
       <div className="space-y-2">
         <Label htmlFor="description">Description</Label>
-        <Textarea
-          id="description"
-          placeholder="Enter course description"
+        <RichTextEditor
           value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          className="min-h-32"
-          required
+          onChange={setDescription}
+          placeholder="Enter course description"
         />
       </div>
 

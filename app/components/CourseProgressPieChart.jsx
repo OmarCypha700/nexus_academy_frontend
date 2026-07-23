@@ -148,7 +148,9 @@ export default function CourseProgressPieChart() {
               nameKey="status"
               cx="50%"
               cy="50%"
+              innerRadius={60}
               outerRadius={100}
+              strokeWidth={2}
               label={{
                 fontSize: 16, // Increase font size of data labels
                 fill: "var(--foreground)", // Use theme foreground color
@@ -160,7 +162,10 @@ export default function CourseProgressPieChart() {
               ))}
             </Pie>
             <ChartTooltip content={<ChartTooltipContent />} />
-            <ChartLegend content={<ChartLegendContent nameKey="status" />} />
+            <ChartLegend
+              content={<ChartLegendContent nameKey="status" className="flex-wrap gap-x-4 gap-y-1" />}
+              wrapperStyle={{ width: "100%" }}
+            />
           </PieChart>
         </ChartContainer>
       </CardContent>

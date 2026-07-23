@@ -1,5 +1,6 @@
 import { ExternalLink, FileText, ArrowUpRight } from "lucide-react";
 import { Separator } from "@/app/components/ui/separator";
+import DOMPurify from "dompurify";
 // import { cn } from "@/app/lib/utils";
 
 export function AdditionalResources({ resources = [] }) {
@@ -40,7 +41,12 @@ export function AdditionalResources({ resources = [] }) {
                 </span> */}
               </div>
               {resource.description && (
-                <p className="text-sm text-gray-500 mt-1 ml-6">{resource.description}</p>
+                <div
+                  className="text-sm text-gray-500 mt-1 ml-6 prose prose-sm max-w-none"
+                  dangerouslySetInnerHTML={{
+                    __html: DOMPurify.sanitize(resource.description),
+                  }}
+                />
               )}
             </li>
           ))}

@@ -22,7 +22,11 @@ export default function LessonList({
   setAddModuleOpen,
   onDeleteModule,
 }) {
-  const hasLessons = modules?.some((mod) => mod.lessons?.length > 0);
+  // Previously gated on "at least one module has a lesson", which made a freshly-created
+  // module (0 lessons, as every module starts) invisible: no header, no way to see it
+  // exists, even though it was successfully created. Gate on modules existing instead —
+  // an empty module still renders its header/accordion, just with no lesson rows.
+  const hasModules = modules?.length > 0;
 
   return (
     <div className="space-y-4">
@@ -45,7 +49,7 @@ export default function LessonList({
         </div>
       </div>
 
-      {hasLessons ? (
+      {hasModules ? (
         <div className="space-y-6">
           {modules.map((module, index) => (
             <div key={module.id} className="space-y-2">
@@ -105,6 +109,11 @@ export default function LessonList({
               </div>
 
               {/* === Lessons Accordion === */}
+              {module.lessons.length === 0 && (
+                <p className="text-sm text-muted-foreground italic px-1">
+                  No lessons in this module yet.
+                </p>
+              )}
               <Accordion type="multiple">
                 {module.lessons.map((lesson) => (
                   <AccordionItem key={lesson.id} value={`lesson-${lesson.id}`}>

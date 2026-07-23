@@ -13,6 +13,7 @@ import { Input } from "@/app/components/ui/input";
 import { toast } from "sonner";
 import DOMPurify from "dompurify";
 import axiosInstance from "@/app/lib/axios";
+import { AdditionalResources } from "@/app/components/course/AdditionalResources";
 
 const VideoLesson = ({ content }) => {
   const youtubeId = useMemo(() => {
@@ -78,15 +79,12 @@ const AssignmentContent = ({ assignment }) => {
             }}
           />
         </div>
+        {assignment.resources?.length > 0 && (
+          <div className="mt-6">
+            <AdditionalResources resources={assignment.resources} />
+          </div>
+        )}
       </CardContent>
-      <CardFooter>
-        <Button
-          variant="outline"
-          onClick={() => console.log(`Download assignment file: ${assignment.id}`)}
-        >
-          Download Assignment
-        </Button>
-      </CardFooter>
     </Card>
   );
 };
@@ -354,7 +352,11 @@ export function LessonContent({ lesson, selectedQuiz, selectedAssignment, onQuiz
               <FileQuestion className="h-5 w-5 mr-2 text-amber-500" />
               <CardTitle>{quizData.title || "Untitled Quiz"}</CardTitle>
             </div>
-            <CardDescription>{quizData.description || "No description available"}</CardDescription>
+            <CardDescription
+              dangerouslySetInnerHTML={{
+                __html: DOMPurify.sanitize(quizData.description || "No description available"),
+              }}
+            />
             <div className="text-xs text-gray-500">
               Passing Score: {quizData.passing_score || "N/A"}% | Attempts Remaining: {quizData.attempts_remaining ?? "Unknown"}
               {quizData.time_limit && ` | Time Limit: ${quizData.time_limit} min`}
@@ -419,9 +421,12 @@ export function LessonContent({ lesson, selectedQuiz, selectedAssignment, onQuiz
   if (lesson) {
     return (
       <div className="space-y-4">
-        <div className="flex">
-          <p>{lesson.description || "No description available"}</p>
-        </div>
+        <div
+          className="flex prose prose-sm max-w-none"
+          dangerouslySetInnerHTML={{
+            __html: DOMPurify.sanitize(lesson.description || "No description available"),
+          }}
+        />
         {lesson.contents?.length > 0 ? (
           lesson.contents.map((content, idx) => (
             <VideoLesson key={idx} content={content} />

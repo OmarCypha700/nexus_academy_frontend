@@ -5,6 +5,7 @@ import { RadioGroup, RadioGroupItem } from "@/app/components/ui/radio-group";
 import { Checkbox } from "@/app/components/ui/checkbox";
 import { Label } from "@/app/components/ui/label";
 import { Input } from "@/app/components/ui/input";
+import DOMPurify from "dompurify";
 
 export default function QuizPreview({ quiz }) {
   if (!quiz) return <div>No quiz selected</div>;
@@ -13,8 +14,14 @@ export default function QuizPreview({ quiz }) {
     <Card className="h-[75vh] max-h-[80vh] rounded-xl shadow-md overflow-y-auto p-4">
       <CardHeader>
         <CardTitle>{quiz.title}</CardTitle>
+        <div
+          className="text-sm text-muted-foreground prose prose-sm max-w-none"
+          dangerouslySetInnerHTML={{
+            __html: DOMPurify.sanitize(quiz.description || "No description provided"),
+          }}
+        />
         <p className="text-sm text-muted-foreground">
-          {quiz.description || "No description provided"} • {quiz.total_questions} questions •
+          {quiz.total_questions} questions •
           Time Limit: {quiz.time_limit ? `${quiz.time_limit} minutes` : "None"} •
           Passing Score: {quiz.passing_score}% • Max Attempts: {quiz.max_attempts}
         </p>

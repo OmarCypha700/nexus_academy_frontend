@@ -10,6 +10,7 @@ import {
   CardFooter,
 } from "@/app/components/ui/card";
 import { Badge } from "@/app/components/ui/badge";
+import DOMPurify from "dompurify";
 
 export default function CourseCard({
   course,
@@ -50,9 +51,12 @@ export default function CourseCard({
             </Button>
           </div>
         </div>
-        <CardDescription className="line-clamp-2">
-          {course.description}
-        </CardDescription>
+        <CardDescription
+          className="line-clamp-2"
+          dangerouslySetInnerHTML={{
+            __html: DOMPurify.sanitize(course.description || ""),
+          }}
+        />
       </CardHeader>
 
       <CardFooter className="pt-2 flex justify-between">

@@ -12,7 +12,7 @@ import {
 } from "@/app/components/ui/dialog";
 import { Label } from "@/app/components/ui/label";
 import { Input } from "@/app/components/ui/input";
-import { Textarea } from "@/app/components/ui/textarea";
+import { RichTextEditor, isRichTextEmpty } from "@/app/components/ui/rich-text-editor";
 import {
   Select,
   SelectTrigger,
@@ -237,7 +237,7 @@ export default function LessonForm({
   const validateForm = () => {
     const newErrors = {};
     if (!formData.title.trim()) newErrors.title = "Title is required";
-    if (!formData.description.trim()) newErrors.description = "Description is required";
+    if (isRichTextEmpty(formData.description)) newErrors.description = "Description is required";
     if (!formData.module) newErrors.module = "Module is required";
     if (!formData.position) newErrors.position = "Position is required";
 
@@ -249,7 +249,7 @@ export default function LessonForm({
         newErrors[`content-${index}`] =
           newErrors[`content-${index}`] || "Duration must be a positive number";
       }
-      if (content.content_type === "text" && !content.text_content?.trim()) {
+      if (content.content_type === "text" && isRichTextEmpty(content.text_content)) {
         newErrors[`content-${index}`] =
           newErrors[`content-${index}`] || "Text content is required for text type";
       }
@@ -260,6 +260,14 @@ export default function LessonForm({
     });
 
     formData.resources.forEach((resource, index) => {
+      // Resources are optional — the form always starts with one blank row so there's
+      // somewhere to type, not because a resource is mandatory. A row nobody touched has
+      // no title/url/description at all; only validate rows the user actually started
+      // filling in (matches the submit-time filter below, which drops untouched rows).
+      const touched =
+        resource.title?.trim() || resource.url?.trim() || !isRichTextEmpty(resource.description);
+      if (!touched) return;
+
       if (!resource.title?.trim()) {
         newErrors[`resource-${index}`] = "Resource title is required";
       }
@@ -332,7 +340,7 @@ export default function LessonForm({
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* {Object.keys(errors).length > 0 && (
+          {Object.keys(errors).length > 0 && (
             <Alert variant="destructive">
               <AlertDescription>
                 Please fix the following errors:
@@ -343,7 +351,7 @@ export default function LessonForm({
                 </ul>
               </AlertDescription>
             </Alert>
-          )} */}
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="title">Lesson Title</Label>
@@ -359,13 +367,10 @@ export default function LessonForm({
 
           <div className="space-y-2">
             <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              name="description"
-              placeholder="Lesson description"
+            <RichTextEditor
               value={formData.description}
-              onChange={(e) => handleChange(e)}
-              required
+              onChange={(html) => setFormData((prev) => ({ ...prev, description: html }))}
+              placeholder="Lesson description"
             />
           </div>
 
@@ -419,12 +424,14 @@ export default function LessonForm({
                   />
                 )}
                 {content.content_type === "text" && (
-                  <Textarea
-                    name="text_content"
-                    placeholder="Text content"
+                  <RichTextEditor
                     value={content.text_content || ""}
-                    onChange={(e) => handleChange(e, index, "contents")}
-                    required
+                    onChange={(html) => {
+                      const newContents = [...formData.contents];
+                      newContents[index] = { ...newContents[index], text_content: html };
+                      setFormData((prev) => ({ ...prev, contents: newContents }));
+                    }}
+                    placeholder="Text content"
                   />
                 )}
                 <div className="space-y-2">
@@ -499,12 +506,14 @@ export default function LessonForm({
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor={`resource-description-${index}`}>Description</Label>
-                  <Textarea
-                    id={`resource-description-${index}`}
-                    name="description"
-                    placeholder="Resource description"
+                  <RichTextEditor
                     value={resource.description || ""}
-                    onChange={(e) => handleChange(e, index, "resources")}
+                    onChange={(html) => {
+                      const newResources = [...formData.resources];
+                      newResources[index] = { ...newResources[index], description: html };
+                      setFormData((prev) => ({ ...prev, resources: newResources }));
+                    }}
+                    placeholder="Resource description"
                   />
                 </div>
                 <Select

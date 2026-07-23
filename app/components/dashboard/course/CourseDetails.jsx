@@ -1,9 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import { Button } from "@/app/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, FileDown } from "lucide-react";
 import LessonList from "@/app/components/dashboard/lesson/LessonList";
 import QuizList from "@/app/components/dashboard/quiz/QuizList";
+import AssignmentList from "@/app/components/dashboard/assignment/AssignmentSection";
+import AikenImportExportDialog from "@/app/components/dashboard/quiz/AikenImportExportDialog";
+import DOMPurify from "dompurify";
 
 export default function CourseDetails({
   course,
@@ -17,19 +21,28 @@ export default function CourseDetails({
   setAddModuleOpen,
   openQuizModal,
   openQuestionModal,
+  openAssignmentModal,
   onClose,
   onDeleteResource,
   outcomes,
 }) {
+  const [aikenDialogOpen, setAikenDialogOpen] = useState(false);
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold">{course?.title}</h2>
         <div className="flex gap-2">
           <Button onClick={() => onEditCourse(course)}>Edit Course</Button>
+          <Button variant="outline" onClick={() => setAikenDialogOpen(true)} className="gap-1">
+            <FileDown size={16} /> Export All Questions
+          </Button>
         </div>
       </div>
-      <p className="text-muted-foreground">{course?.description}</p>
+      <div
+        className="text-muted-foreground prose prose-sm max-w-none"
+        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(course?.description || "") }}
+      />
       <LessonList
         modules={course?.modules || []}
         setAddModuleOpen={setAddModuleOpen}
@@ -47,7 +60,18 @@ export default function CourseDetails({
         openQuizModal={openQuizModal}
         openQuestionModal={openQuestionModal}
       />
+      <AssignmentList
+        courseId={course?.id}
+        openAssignmentModal={openAssignmentModal}
+      />
       <Button onClick={onClose}>Close</Button>
+
+      <AikenImportExportDialog
+        courseId={course?.id}
+        mode="course"
+        open={aikenDialogOpen}
+        onOpenChange={setAikenDialogOpen}
+      />
     </div>
   );
 }

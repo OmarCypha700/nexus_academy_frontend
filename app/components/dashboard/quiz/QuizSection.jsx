@@ -44,7 +44,10 @@ export default function QuizSection({ lessonId, courseId, onQuizUpdate }) {
     setLoading(true);
     try {
       const response = await axiosInstance.get(`/quizzes/?lesson_id=${lessonId}`);
-      setQuizzes(response.data);
+      // QuizListCreateView is a ListCreateAPIView, so it's subject to the backend's global
+      // DEFAULT_PAGINATION_CLASS — response.data is {count, next, previous, results}, not a
+      // bare array. Same bug as QuestionList.jsx.
+      setQuizzes(response.data.results || response.data);
       setError(null);
     } catch (err) {
       setError("Failed to load quizzes");

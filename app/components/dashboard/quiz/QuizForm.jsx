@@ -4,7 +4,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
-import { Textarea } from "@/app/components/ui/textarea";
+import { RichTextEditor } from "@/app/components/ui/rich-text-editor";
 import { Label } from "@/app/components/ui/label";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/app/components/ui/select";
 import axiosInstance from "@/app/lib/axios";
@@ -79,11 +79,9 @@ export default function QuizForm({ courseId, quiz, onSubmit, onCancel }) {
       </div>
       <div className="space-y-2">
         <Label htmlFor="description">Description</Label>
-        <Textarea
-          id="description"
-          name="description"
+        <RichTextEditor
           value={formData.description}
-          onChange={handleChange}
+          onChange={(html) => setFormData((prev) => ({ ...prev, description: html }))}
           placeholder="Enter quiz description"
         />
       </div>

@@ -7,6 +7,7 @@ import { Input } from "@/app/components/ui/input";
 import { Button } from "@/app/components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
+import { parseApiErrors, validateSignupForm } from "@/app/lib/formErrors";
 
 export default function SignupForm() {
   const [formData, setFormData] = useState({
@@ -17,19 +18,27 @@ export default function SignupForm() {
     password: "",
   });
   const [error, setError] = useState(null);
+  const [fieldErrors, setFieldErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   const handleChange = (e) => {
-    setFormData((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    // Clear that field's error as soon as the user starts correcting it.
+    setFieldErrors((prev) => (prev[name] ? { ...prev, [name]: undefined } : prev));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
+
+    const clientErrors = validateSignupForm(formData);
+    if (Object.keys(clientErrors).length > 0) {
+      setFieldErrors(clientErrors);
+      return;
+    }
+    setFieldErrors({});
     setLoading(true);
 
     try {
@@ -38,10 +47,11 @@ export default function SignupForm() {
         router.push("/login");
       }
     } catch (err) {
-      setError(
-        err.response?.data?.detail ||
-          "Failed to create account. Please try again."
+      const { fieldErrors: serverFieldErrors, general } = parseApiErrors(
+        err.response?.data
       );
+      setFieldErrors(serverFieldErrors);
+      setError(general);
     } finally {
       setLoading(false);
     }
@@ -72,53 +82,85 @@ export default function SignupForm() {
             <p className="text-red-500 text-sm mb-4 text-center">{error}</p>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="flex item-center justify-between gap-2">
-              <Input
-              name="first_name"
-              type="text"
-              placeholder="First Name"
-              value={formData.first_name}
-              onChange={handleChange}
-              required
-            />
+          <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <Input
+                  name="first_name"
+                  type="text"
+                  placeholder="First Name"
+                  value={formData.first_name}
+                  onChange={handleChange}
+                  aria-invalid={!!fieldErrors.first_name}
+                  required
+                />
+                {fieldErrors.first_name && (
+                  <p className="text-red-500 text-xs mt-1">{fieldErrors.first_name}</p>
+                )}
+              </div>
 
-            <Input
-              name="last_name"
-              type="text"
-              placeholder="Last Name"
-              value={formData.last_name}
-              onChange={handleChange}
-              required
-            />
+              <div className="flex-1">
+                <Input
+                  name="last_name"
+                  type="text"
+                  placeholder="Last Name"
+                  value={formData.last_name}
+                  onChange={handleChange}
+                  aria-invalid={!!fieldErrors.last_name}
+                  required
+                />
+                {fieldErrors.last_name && (
+                  <p className="text-red-500 text-xs mt-1">{fieldErrors.last_name}</p>
+                )}
+              </div>
             </div>
-            
-            <div className="flex item-center justify-between gap-2">
-            <Input
-              name="username"
-              type="text"
-              placeholder="Username"
-              value={formData.username}
-              onChange={handleChange}
-              required
-            />
-            <Input
-              name="email"
-              type="email"
-              placeholder="Email"
-              value={formData.email}
-              onChange={handleChange}
-              required
-            />
+
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <Input
+                  name="username"
+                  type="text"
+                  placeholder="Username"
+                  value={formData.username}
+                  onChange={handleChange}
+                  aria-invalid={!!fieldErrors.username}
+                  required
+                />
+                {fieldErrors.username && (
+                  <p className="text-red-500 text-xs mt-1">{fieldErrors.username}</p>
+                )}
+              </div>
+
+              <div className="flex-1">
+                <Input
+                  name="email"
+                  type="email"
+                  placeholder="Email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  aria-invalid={!!fieldErrors.email}
+                  required
+                />
+                {fieldErrors.email && (
+                  <p className="text-red-500 text-xs mt-1">{fieldErrors.email}</p>
+                )}
+              </div>
             </div>
-            <Input
-              name="password"
-              type="password"
-              placeholder="Password"
-              value={formData.password}
-              onChange={handleChange}
-              required
-            />
+
+            <div>
+              <Input
+                name="password"
+                type="password"
+                placeholder="Password"
+                value={formData.password}
+                onChange={handleChange}
+                aria-invalid={!!fieldErrors.password}
+                required
+              />
+              {fieldErrors.password && (
+                <p className="text-red-500 text-xs mt-1">{fieldErrors.password}</p>
+              )}
+            </div>
 
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Signing Up..." : "Sign Up"}

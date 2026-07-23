@@ -1,164 +1,119 @@
-// @/app/context/AuthContext.js
-
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import axiosInstance from "@/app/lib/axios";
 
 const AuthContext = createContext();
 
-const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-
 export function AuthProvider({ children }) {
   const [token, setToken] = useState(null);
-  const [refreshToken, setRefreshToken] = useState(null);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   // Initialize auth state from localStorage
   useEffect(() => {
-    const storedToken = localStorage.getItem("accessToken");
-    const storedRefreshToken = localStorage.getItem("refreshToken");
-    const storedUser = localStorage.getItem("userInfo");
-    
-    if (storedToken) {
-      setToken(storedToken);
-      setRefreshToken(storedRefreshToken);
-      
-      if (storedUser) {
-        try {
-          setUser(JSON.parse(storedUser));
-        } catch (e) {
-          console.error("Error parsing stored user info:", e);
+    const initializeAuth = async () => {
+      const storedToken = localStorage.getItem("accessToken");
+      const storedUser = localStorage.getItem("userInfo");
+
+      if (storedToken) {
+        setToken(storedToken);
+
+        if (storedUser) {
+          try {
+            setUser(JSON.parse(storedUser));
+          } catch (e) {
+            console.error("Error parsing stored user info:", e);
+          }
+        } else {
+          // If we have a token but no user info, fetch the user profile
+          await fetchUserProfile();
         }
-      } else {
-        // If we have a token but no user info, fetch the user profile
-        fetchUserProfile(storedToken);
       }
-    }
-    
-    setLoading(false);
+
+      setLoading(false);
+    };
+
+    initializeAuth();
   }, []);
 
-  // Fetch user profile with the token
-  const fetchUserProfile = async (currentToken) => {
+  // Fetch user profile
+  const fetchUserProfile = async () => {
     try {
-      const tokenToUse = currentToken || token;
-      if (!tokenToUse) return null;
-      
-      const response = await fetch(`${API_URL}api/auth/profile/`, {
-        headers: {
-          'Authorization': `Bearer ${tokenToUse}`
-        }
-      });
-      
-      if (response.ok) {
-        const userData = await response.json();
-        localStorage.setItem("userInfo", JSON.stringify(userData));
-        setUser(userData);
-        return userData;
-      } else if (response.status === 401) {
-        // Token expired, try to refresh
-        const refreshSuccess = await refreshAccessToken();
-        if (refreshSuccess) {
-          return fetchUserProfile();
-        } else {
-          handleLogout();
-          return null;
-        }
-      }
+      const response = await axiosInstance.get("auth/profile/");
+      const userData = response.data;
+      localStorage.setItem("userInfo", JSON.stringify(userData));
+      setUser(userData);
+      return userData;
     } catch (error) {
-      console.error("Error fetching user profile:", error);
+      if (error.response?.status === 401) {
+        handleLogout();
+      } else {
+        console.error("Error fetching user profile:", error);
+      }
       return null;
-    }
-  };
-
-  // Refresh the access token
-  const refreshAccessToken = async () => {
-    try {
-      const currentRefreshToken = refreshToken || localStorage.getItem("refreshToken");
-      if (!currentRefreshToken) return false;
-      
-      const response = await fetch(`${API_URL}api/auth/token/refresh/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ refresh: currentRefreshToken }),
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        localStorage.setItem("accessToken", data.access);
-        setToken(data.access);
-        return true;
-      }
-      
-      return false;
-    } catch (error) {
-      console.error("Error refreshing token:", error);
-      return false;
     }
   };
 
   // Handle user login
   const login = async (username, password) => {
     try {
-      const response = await fetch(`${API_URL}api/auth/login/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username, password }),
+      const response = await axiosInstance.post("auth/login/", {
+        username,
+        password,
       });
-      
-      if (!response.ok) {
-        throw new Error('Login failed');
+
+      const { access, csrfToken } = response.data;
+
+      // Refresh token is set as an httpOnly cookie by the backend — nothing to store here.
+      localStorage.setItem("accessToken", access);
+      // The backend also sets this as a cookie, but that cookie lives on the backend's own
+      // origin and this page can never read it via document.cookie (frontend/backend are
+      // different domains) — so the login response hands us the value directly instead.
+      // axios.js echoes it back as X-CSRFToken on the refresh/logout calls that need it.
+      if (csrfToken) {
+        localStorage.setItem("csrfToken", csrfToken);
       }
-      
-      const data = await response.json();
-      
-      // Store tokens
-      localStorage.setItem("accessToken", data.access);
-      localStorage.setItem("refreshToken", data.refresh);
-      setToken(data.access);
-      setRefreshToken(data.refresh);
-      
+      setToken(access);
+
       // Fetch and store user info
-      await fetchUserProfile(data.access);
-      
+      await fetchUserProfile();
+
       return true;
     } catch (error) {
-      console.error("Login error:", error);
+      console.error("Login error:", error.response?.data || error.message);
       return false;
     }
   };
 
   // Handle user logout
   const handleLogout = () => {
+    // Clear local state immediately so the UI reacts right away; the server-side call
+    // (clearing/blacklisting the refresh cookie) is best-effort and shouldn't block it —
+    // the backend's own LogoutView already tolerates a missing/invalid refresh token.
+    axiosInstance.post("auth/logout/").catch(() => {});
+
     localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
     localStorage.removeItem("userInfo");
+    localStorage.removeItem("csrfToken");
     setToken(null);
-    setRefreshToken(null);
     setUser(null);
+    router.push("/login");
   };
 
   // Get dashboard URL based on user role
   const getDashboardUrl = () => {
-    if (!user) return "/dashboard";
-    
-    switch (user.role) {
-      case "instructor":
-        return "dashboard/instructor";
-      case "student":
-        return "dashboard/user";
-      case "admin":
-        return "dashboard/instructor";
-      default:
-        return "/dashboard";
-    }
+    if (!user || !user.role) return "/dashboard/user";
+
+    const roleMap = {
+      instructor: "/dashboard/instructor",
+      student: "/dashboard/user",
+      admin: "/dashboard/instructor",
+    };
+
+    return roleMap[user.role] || "/dashboard/user";
   };
 
   // Check if a user has a specific role
@@ -166,41 +121,9 @@ export function AuthProvider({ children }) {
     return user && user.role === role;
   };
 
-  // API request with automatic token refresh
-  const apiRequest = async (endpoint, options = {}) => {
-    try {
-      // Add authorization header if token exists
-      const currentToken = token || localStorage.getItem("accessToken");
-      
-      if (currentToken) {
-        options.headers = {
-          ...options.headers,
-          'Authorization': `Bearer ${currentToken}`
-        };
-      }
-      
-      const response = await fetch(`${API_URL}${endpoint}`, options);
-      
-      // Handle 401 Unauthorized errors - attempt token refresh
-      if (response.status === 401) {
-        const refreshSuccess = await refreshAccessToken();
-        
-        if (refreshSuccess) {
-          // Retry the original request with new token
-          return apiRequest(endpoint, options);
-        } else {
-          // If refresh fails, logout and redirect
-          handleLogout();
-          router.push('/login');
-          throw new Error('Authentication failed');
-        }
-      }
-      
-      return response;
-    } catch (error) {
-      console.error('API request error:', error);
-      throw error;
-    }
+  // Check if user has any of the specified roles
+  const hasAnyRole = (roles) => {
+    return user && roles.includes(user.role);
   };
 
   const value = {
@@ -212,8 +135,8 @@ export function AuthProvider({ children }) {
     fetchUserProfile,
     getDashboardUrl,
     hasRole,
+    hasAnyRole,
     isAuthenticated: !!token,
-    apiRequest
   };
 
   return (
@@ -223,4 +146,10 @@ export function AuthProvider({ children }) {
   );
 }
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth must be used within AuthProvider");
+  }
+  return context;
+};

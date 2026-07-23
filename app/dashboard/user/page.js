@@ -4,12 +4,16 @@ import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import axios from "@/app/lib/axios";
 import Link from "next/link";
+import { PieChart, Pie, Cell } from "recharts";
 import {
   CalendarIcon,
   BookOpenIcon,
   ClipboardListIcon,
   FileQuestion,
+  FileText,
   Lock,
+  CheckCircle2,
+  Clock,
 } from "lucide-react";
 import {
   Card,
@@ -45,9 +49,105 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "@/app/components/ui/avatar";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  ChartLegend,
+  ChartLegendContent,
+} from "@/app/components/ui/chart";
 import { Skeleton } from "@/app/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/app/components/ui/alert";
 import { useAuth } from "@/app/context/AuthContext";
+import DOMPurify from "dompurify";
+
+const courseChartConfig = {
+  completed: { label: "Completed", color: "var(--chart-3)" },
+  inProgress: { label: "In Progress", color: "var(--chart-2)" },
+  notStarted: { label: "Not Started", color: "var(--chart-5)" },
+};
+
+// Groups a flat list of {course_id, lesson_id, ...} items (quizzes or assignments) into
+// { [courseId]: { title, progress_percent, lessons: { [lessonId]: { title, items } } } },
+// using lesson titles already present in dashboardData.courses[].modules[].lessons[] — no
+// extra API calls needed. Courses with no matching items are omitted entirely.
+function groupByCourseAndLesson(items, courses) {
+  const grouped = {};
+  courses.forEach((course) => {
+    const courseItems = items.filter((item) => item.course_id === course.id);
+    if (courseItems.length === 0) return;
+
+    const lessonTitles = {};
+    course.modules?.forEach((module) => {
+      module.lessons?.forEach((lesson) => {
+        lessonTitles[lesson.id] = lesson.title;
+      });
+    });
+
+    const lessons = {};
+    courseItems.forEach((item) => {
+      if (!lessons[item.lesson_id]) {
+        lessons[item.lesson_id] = {
+          title: lessonTitles[item.lesson_id] || "Untitled Lesson",
+          items: [],
+        };
+      }
+      lessons[item.lesson_id].items.push(item);
+    });
+
+    grouped[course.id] = {
+      title: course.title,
+      progress_percent: course.progress_percent,
+      lessons,
+    };
+  });
+  return grouped;
+}
+
+function dueDateStatus(dueDate) {
+  if (!dueDate) return "none";
+  const diffDays = (new Date(dueDate) - new Date()) / (1000 * 60 * 60 * 24);
+  if (diffDays < 0) return "overdue";
+  if (diffDays <= 3) return "soon";
+  return "normal";
+}
+
+const dueDateBadgeClass = {
+  overdue: "bg-red-100 text-red-800 hover:bg-red-100",
+  soon: "bg-amber-100 text-amber-800 hover:bg-amber-100",
+  normal: "bg-gray-100 text-gray-700 hover:bg-gray-100",
+  none: "bg-gray-50 text-gray-400 hover:bg-gray-50",
+};
+
+const dueDateLabelPrefix = {
+  overdue: "Overdue",
+  soon: "Due soon",
+  normal: "Due",
+};
+
+function StatTile({ icon: Icon, label, value, loading, iconClassName }) {
+  return (
+    <Card className="border shadow-none">
+      <CardContent className="flex items-center gap-2 p-3">
+        <div
+          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
+            iconClassName || "bg-gray-100 text-gray-600"
+          }`}
+        >
+          <Icon className="h-4 w-4" />
+        </div>
+        <div className="min-w-0">
+          <p className="text-[11px] leading-tight text-muted-foreground truncate">{label}</p>
+          {loading ? (
+            <Skeleton className="mt-1 h-5 w-8 rounded" />
+          ) : (
+            <p className="text-lg font-semibold text-gray-900">{value}</p>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function DashboardPage() {
   const [dashboardData, setDashboardData] = useState(null);
@@ -71,7 +171,6 @@ export default function DashboardPage() {
     const fetchDashboard = async () => {
       try {
         const res = await axios.get("/user-dashboard/");
-        console.log(res.data);
         setDashboardData(res.data);
       } catch (err) {
         console.error("Dashboard error:", err);
@@ -100,25 +199,6 @@ export default function DashboardPage() {
     }, {});
   }, [dashboardData?.lesson_progress]);
 
-  // Group quizzes by course
-  const quizzesByCourse = useMemo(() => {
-    if (!dashboardData?.quizzes || !dashboardData?.courses) return {};
-    const grouped = {};
-    dashboardData.courses.forEach((course) => {
-      grouped[course.id] = {
-        title: course.title,
-        progress_percent: course.progress_percent,
-        quizzes: dashboardData.quizzes
-          .filter((quiz) => quiz.course_id === course.id)
-          .map((quiz) => ({
-            ...quiz,
-            lesson_completed: lessonProgressMap[quiz.lesson_id] || false,
-          })),
-      };
-    });
-    return grouped;
-  }, [dashboardData, lessonProgressMap]);
-
   // Check if a course is completed
   const isCourseCompleted = (course) => {
     if (!course.modules || !dashboardData?.lesson_progress) return false;
@@ -130,6 +210,47 @@ export default function DashboardPage() {
     );
   };
 
+  const quizzesByCourseLesson = useMemo(() => {
+    if (!dashboardData?.quizzes || !dashboardData?.courses) return {};
+    const quizzesWithProgress = dashboardData.quizzes.map((quiz) => ({
+      ...quiz,
+      lesson_completed: lessonProgressMap[quiz.lesson_id] || false,
+    }));
+    return groupByCourseAndLesson(quizzesWithProgress, dashboardData.courses);
+  }, [dashboardData?.quizzes, dashboardData?.courses, lessonProgressMap]);
+
+  const assignmentsByCourseLesson = useMemo(() => {
+    if (!dashboardData?.assignments || !dashboardData?.courses) return {};
+    return groupByCourseAndLesson(dashboardData.assignments, dashboardData.courses);
+  }, [dashboardData?.assignments, dashboardData?.courses]);
+
+  const courseStatusData = useMemo(() => {
+    const courses = dashboardData?.courses || [];
+    let completed = 0;
+    let inProgress = 0;
+    let notStarted = 0;
+    courses.forEach((course) => {
+      if (isCourseCompleted(course)) completed += 1;
+      else if ((course.progress_percent || 0) > 0) inProgress += 1;
+      else notStarted += 1;
+    });
+    return [
+      { status: "completed", label: "Completed", count: completed, fill: courseChartConfig.completed.color },
+      { status: "inProgress", label: "In Progress", count: inProgress, fill: courseChartConfig.inProgress.color },
+      { status: "notStarted", label: "Not Started", count: notStarted, fill: courseChartConfig.notStarted.color },
+    ];
+  }, [dashboardData?.courses, lessonProgressMap]);
+
+  const upcomingDeadlinesCount = useMemo(() => {
+    if (!dashboardData?.assignments) return 0;
+    return dashboardData.assignments.filter((a) => {
+      const s = dueDateStatus(a.due_date);
+      return s === "overdue" || s === "soon";
+    }).length;
+  }, [dashboardData?.assignments]);
+
+  const hasCourseActivity = courseStatusData.some((d) => d.count > 0);
+
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-6">
       <div className="max-w-6xl mx-auto">
@@ -140,7 +261,7 @@ export default function DashboardPage() {
           </Alert>
         )}
 
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
           <div className="flex items-center gap-4 mb-4 md:mb-0">
             <Avatar className="h-12 w-12">
               <AvatarImage src={user?.avatar} alt={user?.username || "User"} />
@@ -149,17 +270,82 @@ export default function DashboardPage() {
               </AvatarFallback>
             </Avatar>
             <div>
-              <h1 className="text-3xl font-bold text-gray-800">
+              <h1 className="text-2xl md:text-3xl font-semibold text-gray-900">
                 Welcome back, {user?.last_name} {user?.first_name}
               </h1>
-              <p className="text-gray-600">
+              <p className="text-sm text-muted-foreground">
                 Let&apos;s continue your learning journey
               </p>
             </div>
           </div>
-          <Button>
+          <Button asChild>
             <Link href="/courses">Browse Courses</Link>
           </Button>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
+          <Card className="border shadow-none">
+            <CardHeader className="pb-0">
+              <CardTitle className="text-sm font-medium text-gray-700">
+                Course Progress
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-2">
+              {loading ? (
+                <Skeleton className="h-[180px] w-full rounded" />
+              ) : hasCourseActivity ? (
+                <ChartContainer config={courseChartConfig} className="mx-auto h-[180px] w-full">
+                  <PieChart>
+                    <Pie
+                      data={courseStatusData}
+                      dataKey="count"
+                      nameKey="status"
+                      innerRadius={45}
+                      outerRadius={70}
+                      strokeWidth={2}
+                    >
+                      {courseStatusData.map((entry) => (
+                        <Cell key={entry.status} fill={entry.fill} />
+                      ))}
+                    </Pie>
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <ChartLegend
+                      content={<ChartLegendContent nameKey="status" className="flex-wrap gap-x-4 gap-y-1" />}
+                      wrapperStyle={{ width: "100%" }}
+                    />
+                  </PieChart>
+                </ChartContainer>
+              ) : (
+                <p className="py-8 text-center text-sm text-muted-foreground">
+                  Enroll in a course to see your progress here.
+                </p>
+              )}
+            </CardContent>
+          </Card>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 gap-3 content-start">
+            <StatTile
+              icon={BookOpenIcon}
+              label="Enrolled Courses"
+              loading={loading}
+              value={dashboardData?.courses?.length || 0}
+              iconClassName="bg-blue-50 text-blue-600"
+            />
+            <StatTile
+              icon={CheckCircle2}
+              label="Completed"
+              loading={loading}
+              value={dashboardData?.courses?.filter((c) => isCourseCompleted(c)).length || 0}
+              iconClassName="bg-green-50 text-green-600"
+            />
+            <StatTile
+              icon={Clock}
+              label="Upcoming Deadlines"
+              loading={loading}
+              value={upcomingDeadlinesCount}
+              iconClassName="bg-amber-50 text-amber-600"
+            />
+          </div>
         </div>
 
         <Tabs defaultValue="courses" className="w-full">
@@ -183,12 +369,15 @@ export default function DashboardPage() {
                   ))
               ) : dashboardData?.courses?.length ? (
                 dashboardData.courses.map((course) => (
-                  <Card key={course.id} className="overflow-hidden">
+                  <Card key={course.id} className="overflow-hidden border shadow-none hover:shadow-sm transition-shadow">
                     <CardHeader className="pb-2">
                       <CardTitle>{course.title}</CardTitle>
-                      <CardDescription className="line-clamp-2">
-                        {course.description}
-                      </CardDescription>
+                      <CardDescription
+                        className="line-clamp-2"
+                        dangerouslySetInnerHTML={{
+                          __html: DOMPurify.sanitize(course.description || ""),
+                        }}
+                      />
                     </CardHeader>
                     <CardContent>
                       <div className="mb-2">
@@ -248,14 +437,11 @@ export default function DashboardPage() {
           </TabsContent>
 
           <TabsContent value="assignments">
-            <Card>
+            <Card className="border shadow-none">
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center">
-                    <ClipboardListIcon className="mr-2 h-5 w-5" /> Pending
-                    Assignments
-                  </CardTitle>
-                </div>
+                <CardTitle className="flex items-center">
+                  <ClipboardListIcon className="mr-2 h-5 w-5" /> Assignments
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 {loading ? (
@@ -267,42 +453,84 @@ export default function DashboardPage() {
                         <Skeleton className="h-4 w-1/4 rounded" />
                       </div>
                     ))
-                ) : dashboardData?.upcoming_assignments?.length ? (
-                  <div className="space-y-4">
-                    {dashboardData.upcoming_assignments.map((assignment) => (
-                      <div
-                        key={assignment.id}
-                        className="border-b pb-4 last:border-0 last:pb-0"
-                      >
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h3 className="font-medium">{assignment.title}</h3>
-                            <p className="text-sm text-gray-500 mt-1">
-                              {assignment.description?.substring(0, 100) ||
-                                "No description available"}
-                            </p>
-                          </div>
-                          <div className="flex items-center">
-                            <Badge
-                              variant="outline"
-                              className="flex items-center"
-                            >
-                              <CalendarIcon className="mr-1 h-3 w-3" />
-                              {formatDate(assignment.due_date)}
-                            </Badge>
-                          </div>
-                        </div>
-                        <div className="mt-3 flex justify-end">
-                          <Button size="sm" variant="outline">
-                            View Details
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                ) : Object.keys(assignmentsByCourseLesson).length ? (
+                  <Accordion type="single" collapsible className="w-full">
+                    {Object.entries(assignmentsByCourseLesson).map(
+                      ([courseId, course]) => (
+                        <AccordionItem key={courseId} value={`a-course-${courseId}`} className="border-b">
+                          <AccordionTrigger className="hover:no-underline">
+                            <div className="flex items-center justify-between w-full">
+                              <div className="flex items-center">
+                                <BookOpenIcon className="h-5 w-5 mr-2 text-gray-600" />
+                                <span className="font-medium text-gray-800">{course.title}</span>
+                              </div>
+                              <Badge
+                                variant="outline"
+                                className={
+                                  course.progress_percent === 100
+                                    ? "ml-2 bg-green-100 text-green-800 hover:bg-green-200"
+                                    : "ml-2 bg-gray-100 text-gray-800 hover:bg-gray-200"
+                                }
+                              >
+                                {course.progress_percent}% Complete
+                              </Badge>
+                            </div>
+                          </AccordionTrigger>
+                          <AccordionContent>
+                            <Accordion type="single" collapsible className="w-full pl-4">
+                              {Object.entries(course.lessons).map(([lessonId, lesson]) => (
+                                <AccordionItem
+                                  key={lessonId}
+                                  value={`a-lesson-${courseId}-${lessonId}`}
+                                  className="border-b-0"
+                                >
+                                  <AccordionTrigger className="hover:no-underline py-2 text-sm">
+                                    <span className="flex items-center gap-2 text-gray-700">
+                                      <FileText className="h-4 w-4 text-gray-500" />
+                                      {lesson.title}
+                                    </span>
+                                  </AccordionTrigger>
+                                  <AccordionContent>
+                                    <div className="space-y-2 pl-6">
+                                      {lesson.items.map((assignment) => {
+                                        const status = dueDateStatus(assignment.due_date);
+                                        return (
+                                          <button
+                                            key={assignment.id}
+                                            type="button"
+                                            onClick={() =>
+                                              router.push(
+                                                `/learn/${courseId}?assignmentId=${assignment.id}&lessonId=${lessonId}`
+                                              )
+                                            }
+                                            className="w-full flex items-center justify-between gap-2 rounded-lg border p-3 text-left hover:bg-gray-50 transition-colors"
+                                          >
+                                            <span className="flex items-center gap-2 text-sm font-medium text-gray-800 truncate">
+                                              <ClipboardListIcon className="h-4 w-4 shrink-0 text-gray-500" />
+                                              <span className="truncate">{assignment.title}</span>
+                                            </span>
+                                            <Badge className={`shrink-0 ${dueDateBadgeClass[status]}`}>
+                                              <CalendarIcon className="mr-1 h-3 w-3" />
+                                              {status === "none"
+                                                ? "No due date"
+                                                : `${dueDateLabelPrefix[status]} ${formatDate(assignment.due_date)}`}
+                                            </Badge>
+                                          </button>
+                                        );
+                                      })}
+                                    </div>
+                                  </AccordionContent>
+                                </AccordionItem>
+                              ))}
+                            </Accordion>
+                          </AccordionContent>
+                        </AccordionItem>
+                      )
+                    )}
+                  </Accordion>
                 ) : (
                   <p className="text-gray-500">
-                    No pending assignments. Enjoy your free time!
+                    No assignments yet. Enjoy your free time!
                   </p>
                 )}
               </CardContent>
@@ -310,13 +538,11 @@ export default function DashboardPage() {
           </TabsContent>
 
           <TabsContent value="quizzes">
-            <Card>
+            <Card className="border shadow-none">
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center">
-                    <BookOpenIcon className="mr-2 h-5 w-5" /> Available Quizzes
-                  </CardTitle>
-                </div>
+                <CardTitle className="flex items-center">
+                  <BookOpenIcon className="mr-2 h-5 w-5" /> Available Quizzes
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 {loading ? (
@@ -328,103 +554,104 @@ export default function DashboardPage() {
                         <Skeleton className="h-4 w-1/4 rounded" />
                       </div>
                     ))
-                ) : Object.keys(quizzesByCourse).length ? (
+                ) : Object.keys(quizzesByCourseLesson).length ? (
                   <Accordion type="single" collapsible className="w-full">
-                    {Object.entries(quizzesByCourse).map(
-                      ([courseId, course]) =>
-                        course.quizzes.length > 0 && (
-                          <AccordionItem
-                            key={courseId}
-                            value={courseId}
-                            className="border-b"
-                          >
-                            <AccordionTrigger className="hover:no-underline">
-                              <div className="flex items-center justify-between w-full">
-                                <div className="flex items-center">
-                                  <BookOpenIcon className="h-5 w-5 mr-2 text-gray-600" />
-                                  <span className="font-medium text-gray-800">
-                                    {course.title}
-                                  </span>
-                                </div>
-                                <Badge
-                                  variant="outline"
-                                  className={
-                                    course.progress_percent ===100
-                                      ? "ml-2 bg-green-100 text-green-800 hover:bg-green-200"
-                                      : "ml-2 bg-gray-100 text-gray-800 hover:bg-gray-200"
-                                  }
-                                >
-                                  {course.progress_percent}% Complete
-                                </Badge>
+                    {Object.entries(quizzesByCourseLesson).map(
+                      ([courseId, course]) => (
+                        <AccordionItem key={courseId} value={`q-course-${courseId}`} className="border-b">
+                          <AccordionTrigger className="hover:no-underline">
+                            <div className="flex items-center justify-between w-full">
+                              <div className="flex items-center">
+                                <BookOpenIcon className="h-5 w-5 mr-2 text-gray-600" />
+                                <span className="font-medium text-gray-800">{course.title}</span>
                               </div>
-                            </AccordionTrigger>
-                            <AccordionContent>
-                              <div className="space-y-2 pl-4">
-                                {course.quizzes.map((quiz) => (
-                                  <TooltipProvider key={quiz.id}>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <Button
-                                          variant="ghost"
-                                          className="w-full justify-between text-left h-auto py-2"
-                                          disabled={
-                                            !quiz.lesson_completed ||
-                                            !quiz.can_attempt
-                                          }
-                                          onClick={() =>
-                                            router.push(
-                                              `/learn/${quiz.course_id}?quizId=${quiz.id}&lessonId=${quiz.lesson_id}`
-                                            )
-                                          }
-                                          aria-label={
-                                            quiz.lesson_completed &&
-                                            quiz.can_attempt
-                                              ? `Take quiz: ${quiz.title}`
-                                              : `Quiz unavailable: ${quiz.title}`
-                                          }
-                                        >
-                                          <div className="flex items-center justify-between w-full">
-                                            <div className="flex items-center">
-                                              <FileQuestion className="h-4 w-4 mr-2 text-gray-500" />
-                                              <span className="text-sm truncate">
-                                                {quiz.title}
-                                              </span>
-                                            </div>
-                                            <div className="flex items-center space-x-2">
-                                              <Badge
-                                                variant={
-                                                  quiz.lesson_completed
-                                                    ? "default"
-                                                    : "secondary"
+                              <Badge
+                                variant="outline"
+                                className={
+                                  course.progress_percent === 100
+                                    ? "ml-2 bg-green-100 text-green-800 hover:bg-green-200"
+                                    : "ml-2 bg-gray-100 text-gray-800 hover:bg-gray-200"
+                                }
+                              >
+                                {course.progress_percent}% Complete
+                              </Badge>
+                            </div>
+                          </AccordionTrigger>
+                          <AccordionContent>
+                            <Accordion type="single" collapsible className="w-full pl-4">
+                              {Object.entries(course.lessons).map(([lessonId, lesson]) => (
+                                <AccordionItem
+                                  key={lessonId}
+                                  value={`q-lesson-${courseId}-${lessonId}`}
+                                  className="border-b-0"
+                                >
+                                  <AccordionTrigger className="hover:no-underline py-2 text-sm">
+                                    <span className="flex items-center gap-2 text-gray-700">
+                                      <FileText className="h-4 w-4 text-gray-500" />
+                                      {lesson.title}
+                                    </span>
+                                  </AccordionTrigger>
+                                  <AccordionContent>
+                                    <div className="space-y-2 pl-6">
+                                      {lesson.items.map((quiz) => (
+                                        <TooltipProvider key={quiz.id}>
+                                          <Tooltip>
+                                            <TooltipTrigger asChild>
+                                              <Button
+                                                variant="ghost"
+                                                className="w-full justify-between text-left h-auto py-2 border"
+                                                disabled={!quiz.lesson_completed || !quiz.can_attempt}
+                                                onClick={() =>
+                                                  router.push(
+                                                    `/learn/${courseId}?quizId=${quiz.id}&lessonId=${lessonId}`
+                                                  )
+                                                }
+                                                aria-label={
+                                                  quiz.lesson_completed && quiz.can_attempt
+                                                    ? `Take quiz: ${quiz.title}`
+                                                    : `Quiz unavailable: ${quiz.title}`
                                                 }
                                               >
+                                                <div className="flex items-center justify-between w-full">
+                                                  <div className="flex items-center">
+                                                    <FileQuestion className="h-4 w-4 mr-2 text-gray-500" />
+                                                    <span className="text-sm truncate">{quiz.title}</span>
+                                                  </div>
+                                                  <div className="flex items-center space-x-2">
+                                                    <Badge
+                                                      variant={quiz.lesson_completed ? "default" : "secondary"}
+                                                    >
+                                                      {quiz.lesson_completed
+                                                        ? `${quiz.attempts_count}/${quiz.max_attempts} Attempts`
+                                                        : "Lesson Incomplete"}
+                                                    </Badge>
+                                                    {!quiz.lesson_completed && (
+                                                      <Lock className="h-4 w-4 text-gray-400" />
+                                                    )}
+                                                  </div>
+                                                </div>
+                                              </Button>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                              <p>
                                                 {quiz.lesson_completed
-                                                  ? `${quiz.attempts_count}/${quiz.max_attempts} Attempts`
-                                                  : "Lesson Incomplete"}
-                                              </Badge>
-                                              {!quiz.lesson_completed && (
-                                                <Lock className="h-4 w-4 text-gray-400" />
-                                              )}
-                                            </div>
-                                          </div>
-                                        </Button>
-                                      </TooltipTrigger>
-                                      <TooltipContent>
-                                        <p>
-                                          {quiz.lesson_completed
-                                            ? quiz.can_attempt
-                                              ? `Take ${quiz.title} (${quiz.attempts_count}/${quiz.max_attempts} attempts used)`
-                                              : "No attempts remaining"
-                                            : "Complete the associated lesson to unlock this quiz"}
-                                        </p>
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  </TooltipProvider>
-                                ))}
-                              </div>
-                            </AccordionContent>
-                          </AccordionItem>
-                        )
+                                                  ? quiz.can_attempt
+                                                    ? `Take ${quiz.title} (${quiz.attempts_count}/${quiz.max_attempts} attempts used)`
+                                                    : "No attempts remaining"
+                                                  : "Complete the associated lesson to unlock this quiz"}
+                                              </p>
+                                            </TooltipContent>
+                                          </Tooltip>
+                                        </TooltipProvider>
+                                      ))}
+                                    </div>
+                                  </AccordionContent>
+                                </AccordionItem>
+                              ))}
+                            </Accordion>
+                          </AccordionContent>
+                        </AccordionItem>
+                      )
                     )}
                   </Accordion>
                 ) : (
@@ -436,56 +663,6 @@ export default function DashboardPage() {
             </Card>
           </TabsContent>
         </Tabs>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">
-                Completed Courses
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {loading ? (
-                  <Skeleton className="h-8 w-12 rounded" />
-                ) : (
-                  dashboardData?.courses?.filter((c) => isCourseCompleted(c))
-                    .length || 0
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">In Progress</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {loading ? (
-                  <Skeleton className="h-8 w-12 rounded" />
-                ) : (
-                  dashboardData?.courses?.filter(
-                    (c) => c.progress_percent > 0 && !isCourseCompleted(c)
-                  ).length || 0
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">
-                Total Study Hours
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {loading ? <Skeleton className="h-8 w-12 rounded" /> : "12h"}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
       </div>
     </div>
   );

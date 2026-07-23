@@ -1,17 +1,19 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Pencil, Trash2, Plus } from "lucide-react";
+import { Pencil, Trash2, Plus, FileUp } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card";
 import { Alert, AlertDescription } from "@/app/components/ui/alert";
 import axiosInstance from "@/app/lib/axios";
+import AikenImportExportDialog from "./AikenImportExportDialog";
 
-export default function QuestionList({ quizId, openQuestionModal }) {
+export default function QuestionList({ quizId, quizTitle, openQuestionModal }) {
   const [questions, setQuestions] = useState([]);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [aikenDialogOpen, setAikenDialogOpen] = useState(false);
 
   useEffect(() => {
     fetchQuestions();
@@ -21,7 +23,10 @@ export default function QuestionList({ quizId, openQuestionModal }) {
     setLoading(true);
     try {
       const response = await axiosInstance.get(`/questions/?quiz_id=${quizId}`);
-      setQuestions(response.data);
+      // QuestionListCreateView is a ListCreateAPIView, so it's subject to the backend's
+      // global DEFAULT_PAGINATION_CLASS — response.data is {count, next, previous, results},
+      // not a bare array.
+      setQuestions(response.data.results || response.data);
       setError(null);
     } catch (err) {
       setError(err.response?.data?.detail || "Failed to load questions");
@@ -47,10 +52,27 @@ export default function QuestionList({ quizId, openQuestionModal }) {
     <Card className="max-h-96 overflow-y-auto space-y-2 p-4">
       <div className="flex justify-between items-center mb-2">
         <h4 className="text-md font-medium">Questions</h4>
-        <Button onClick={() => openQuestionModal(null)} className="gap-1">
-          <Plus size={16} /> Add Question
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => setAikenDialogOpen(true)}
+            className="gap-1"
+          >
+            <FileUp size={16} /> Import/Export
+          </Button>
+          <Button onClick={() => openQuestionModal(null)} className="gap-1">
+            <Plus size={16} /> Add Question
+          </Button>
+        </div>
       </div>
+
+      <AikenImportExportDialog
+        quiz={{ id: quizId, title: quizTitle }}
+        mode="quiz"
+        open={aikenDialogOpen}
+        onOpenChange={setAikenDialogOpen}
+        onImported={fetchQuestions}
+      />
 
       {error && (
         <Alert variant="destructive" className="mb-2">

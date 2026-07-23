@@ -37,6 +37,7 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "@/app/components/ui/alert";
 import { useAuth } from "@/app/context/AuthContext";
 import Paystack from "@paystack/inline-js";
+import DOMPurify from "dompurify";
 
 export default function CourseDetailPage() {
   const { id } = useParams();
@@ -58,7 +59,7 @@ export default function CourseDetailPage() {
 
         if (user) {
           const enrollmentRes = await axiosInstance.get(
-            `enrollments/check/${id}/`
+            `enrollments/check/${id}/`,
           );
           setIsEnrolled(enrollmentRes.data.enrolled);
         }
@@ -67,7 +68,7 @@ export default function CourseDetailPage() {
         setError(
           error.response?.data?.detail ||
             error.message ||
-            "Failed to load course"
+            "Failed to load course",
         );
       } finally {
         setLoading(false);
@@ -122,7 +123,7 @@ export default function CourseDetailPage() {
         } catch (err) {
           console.error("Enrollment error:", err);
           setError(
-            err.response?.data?.detail || err.message || "Enrollment failed"
+            err.response?.data?.detail || err.message || "Enrollment failed",
           );
         } finally {
           setEnrolling(false);
@@ -148,7 +149,7 @@ export default function CourseDetailPage() {
                 {
                   reference: transaction.reference,
                   course_id: id,
-                }
+                },
               );
 
               if (verifyResponse.data.status === "success") {
@@ -156,13 +157,13 @@ export default function CourseDetailPage() {
                 router.push(`/learn/${id}`);
               } else {
                 setPaymentError(
-                  "Payment verification failed. Please try again."
+                  "Payment verification failed. Please try again.",
                 );
               }
             } catch (err) {
               console.error("Payment verification error:", err);
               setPaymentError(
-                err.response?.data?.detail || "Payment verification failed."
+                err.response?.data?.detail || "Payment verification failed.",
               );
             } finally {
               setEnrolling(false);
@@ -175,7 +176,7 @@ export default function CourseDetailPage() {
           onError: (error) => {
             console.error("Paystack error:", error);
             setPaymentError(
-              error.message || "An error occurred during payment."
+              error.message || "An error occurred during payment.",
             );
             setEnrolling(false);
           },
@@ -184,7 +185,7 @@ export default function CourseDetailPage() {
     } catch (err) {
       console.error("Payment initialization error:", err);
       setPaymentError(
-        err.response?.data?.detail || "Failed to initialize payment."
+        err.response?.data?.detail || "Failed to initialize payment.",
       );
       setEnrolling(false);
     }
@@ -266,7 +267,7 @@ export default function CourseDetailPage() {
             className="absolute inset-0 opacity-50"
             style={{
               backgroundImage: `url(${getYouTubeThumbnail(
-                course.intro_video_id
+                course.intro_video_id,
               )})`,
               backgroundSize: "cover",
               backgroundPosition: "center",
@@ -282,9 +283,10 @@ export default function CourseDetailPage() {
               <h1 className="text-4xl sm:text-5xl font-bold text-white mb-4 leading-tight">
                 {course.title}
               </h1>
-              <p className="text-gray-200 text-lg max-w-2xl mb-6 line-clamp-2">
-                {course.description}
-              </p>
+              <div
+                className="text-gray-200 text-lg max-w-2xl mb-6 line-clamp-2 prose prose-invert prose-sm"
+                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(course.description) }}
+              />
               <div className="flex flex-wrap items-center gap-4 text-sm text-gray-300">
                 {course.instructor_details && (
                   <div className="flex items-center">
@@ -334,7 +336,10 @@ export default function CourseDetailPage() {
                 <div>
                   <h2 className="text-2xl font-bold mb-4">About This Course</h2>
                   <div className="prose max-w-none">
-                    <p className="text-gray-700">{course.description}</p>
+                    <div
+                      className="text-gray-700"
+                      dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(course.description) }}
+                    />
                     <p className="text-gray-700 mt-4">
                       This comprehensive course will take you through all the
                       essential concepts and give you practical, hands-on
@@ -418,7 +423,7 @@ export default function CourseDetailPage() {
                     <AvatarFallback className="bg-primary text-white text-xl">
                       {course.instructor_details
                         ? `${course.instructor_details.first_name.charAt(
-                            0
+                            0,
                           )}${course.instructor_details.last_name.charAt(0)}`
                         : "IN"}
                     </AvatarFallback>
@@ -517,8 +522,8 @@ export default function CourseDetailPage() {
                   {enrolling
                     ? "Processing Payment..."
                     : isEnrolled
-                    ? "Continue Learning"
-                    : "Enroll Now"}
+                      ? "Continue Learning"
+                      : "Enroll Now"}
                 </Button>
                 <p className="text-xs text-center text-gray-500">
                   30-day money-back guarantee, no questions asked

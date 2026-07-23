@@ -32,10 +32,18 @@
 //     );
 //   }
 
+  import DOMPurify from "dompurify";
+
   export function LessonDescription({ currentLesson, course }) {
   return (
     <div className="prose mb-6">
-      <p>{currentLesson?.description || "No description available for this lesson."}</p>
+      <div
+        dangerouslySetInnerHTML={{
+          __html: DOMPurify.sanitize(
+            currentLesson?.description || "No description available for this lesson."
+          ),
+        }}
+      />
       {/* {course.outcomes?.length > 0 && (
         <>
           <h3>What You&apos;ll Learn</h3>
