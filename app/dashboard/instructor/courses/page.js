@@ -345,7 +345,7 @@ export default function InstructorDashboardCourses() {
   return (
     <div className="container py-8">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Courses</h1>
+        <h1 className="text-2xl font-bold text-foreground">Courses</h1>
         <p className="text-sm text-muted-foreground">
           Create and manage your courses, lessons, quizzes, and assignments.
         </p>
@@ -358,7 +358,7 @@ export default function InstructorDashboardCourses() {
       )}
 
       {success && (
-        <Alert className="mb-4 bg-green-50 border-green-200 text-green-800">
+        <Alert className="mb-4 bg-green-50 border-green-200 text-green-800 dark:bg-green-950/30 dark:border-green-900 dark:text-green-400">
           <AlertDescription>{success}</AlertDescription>
         </Alert>
       )}

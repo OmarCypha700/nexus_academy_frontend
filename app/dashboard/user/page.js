@@ -113,10 +113,10 @@ function dueDateStatus(dueDate) {
 }
 
 const dueDateBadgeClass = {
-  overdue: "bg-red-100 text-red-800 hover:bg-red-100",
-  soon: "bg-amber-100 text-amber-800 hover:bg-amber-100",
-  normal: "bg-gray-100 text-gray-700 hover:bg-gray-100",
-  none: "bg-gray-50 text-gray-400 hover:bg-gray-50",
+  overdue: "bg-destructive/10 text-destructive hover:bg-destructive/10",
+  soon: "bg-amber-100 text-amber-800 hover:bg-amber-100 dark:bg-amber-950/40 dark:text-amber-400 dark:hover:bg-amber-950/40",
+  normal: "bg-muted text-muted-foreground hover:bg-muted",
+  none: "bg-muted/50 text-muted-foreground hover:bg-muted/50",
 };
 
 const dueDateLabelPrefix = {
@@ -131,7 +131,7 @@ function StatTile({ icon: Icon, label, value, loading, iconClassName }) {
       <CardContent className="flex items-center gap-2 p-3">
         <div
           className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
-            iconClassName || "bg-gray-100 text-gray-600"
+            iconClassName || "bg-muted text-muted-foreground"
           }`}
         >
           <Icon className="h-4 w-4" />
@@ -141,7 +141,7 @@ function StatTile({ icon: Icon, label, value, loading, iconClassName }) {
           {loading ? (
             <Skeleton className="mt-1 h-5 w-8 rounded" />
           ) : (
-            <p className="text-lg font-semibold text-gray-900">{value}</p>
+            <p className="text-lg font-semibold text-foreground">{value}</p>
           )}
         </div>
       </CardContent>
@@ -252,7 +252,7 @@ export default function DashboardPage() {
   const hasCourseActivity = courseStatusData.some((d) => d.count > 0);
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-6">
+    <div className="min-h-screen bg-muted/30 p-4 md:p-6">
       <div className="max-w-6xl mx-auto">
         {error && (
           <Alert variant="destructive" className="mb-6">
@@ -265,12 +265,12 @@ export default function DashboardPage() {
           <div className="flex items-center gap-4 mb-4 md:mb-0">
             <Avatar className="h-12 w-12">
               <AvatarImage src={user?.avatar} alt={user?.username || "User"} />
-              <AvatarFallback className="bg-black text-white">
+              <AvatarFallback className="bg-primary text-primary-foreground">
                 {initials || "U"}
               </AvatarFallback>
             </Avatar>
             <div>
-              <h1 className="text-2xl md:text-3xl font-semibold text-gray-900">
+              <h1 className="text-2xl md:text-3xl font-semibold text-foreground">
                 Welcome back, {user?.last_name} {user?.first_name}
               </h1>
               <p className="text-sm text-muted-foreground">
@@ -286,7 +286,7 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
           <Card className="border shadow-none">
             <CardHeader className="pb-0">
-              <CardTitle className="text-sm font-medium text-gray-700">
+              <CardTitle className="text-sm font-medium text-foreground">
                 Course Progress
               </CardTitle>
             </CardHeader>
@@ -329,21 +329,21 @@ export default function DashboardPage() {
               label="Enrolled Courses"
               loading={loading}
               value={dashboardData?.courses?.length || 0}
-              iconClassName="bg-blue-50 text-blue-600"
+              iconClassName="bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400"
             />
             <StatTile
               icon={CheckCircle2}
               label="Completed"
               loading={loading}
               value={dashboardData?.courses?.filter((c) => isCourseCompleted(c)).length || 0}
-              iconClassName="bg-green-50 text-green-600"
+              iconClassName="bg-green-50 text-green-600 dark:bg-green-950/40 dark:text-green-400"
             />
             <StatTile
               icon={Clock}
               label="Upcoming Deadlines"
               loading={loading}
               value={upcomingDeadlinesCount}
-              iconClassName="bg-amber-50 text-amber-600"
+              iconClassName="bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400"
             />
           </div>
         </div>
@@ -398,8 +398,8 @@ export default function DashboardPage() {
                         }
                         className={
                           isCourseCompleted(course)
-                            ? "bg-green-100 text-green-800 hover:bg-green-200"
-                            : "bg-gray-100 text-gray-800 hover:bg-gray-200"
+                            ? "bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/40"
+                            : "bg-muted text-muted-foreground hover:bg-muted/70"
                         }
                       >
                         {isCourseCompleted(course)
@@ -410,7 +410,7 @@ export default function DashboardPage() {
                         asChild
                         variant="outline"
                         size="sm"
-                        className={"hover:bg-black hover:text-white"}
+                        className={"hover:bg-primary hover:text-primary-foreground"}
                       >
                         <Link href={`/learn/${course.id}`}>Continue</Link>
                       </Button>
@@ -461,15 +461,15 @@ export default function DashboardPage() {
                           <AccordionTrigger className="hover:no-underline">
                             <div className="flex items-center justify-between w-full">
                               <div className="flex items-center">
-                                <BookOpenIcon className="h-5 w-5 mr-2 text-gray-600" />
-                                <span className="font-medium text-gray-800">{course.title}</span>
+                                <BookOpenIcon className="h-5 w-5 mr-2 text-muted-foreground" />
+                                <span className="font-medium text-foreground">{course.title}</span>
                               </div>
                               <Badge
                                 variant="outline"
                                 className={
                                   course.progress_percent === 100
-                                    ? "ml-2 bg-green-100 text-green-800 hover:bg-green-200"
-                                    : "ml-2 bg-gray-100 text-gray-800 hover:bg-gray-200"
+                                    ? "ml-2 bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/40"
+                                    : "ml-2 bg-muted text-muted-foreground hover:bg-muted/70"
                                 }
                               >
                                 {course.progress_percent}% Complete
@@ -485,8 +485,8 @@ export default function DashboardPage() {
                                   className="border-b-0"
                                 >
                                   <AccordionTrigger className="hover:no-underline py-2 text-sm">
-                                    <span className="flex items-center gap-2 text-gray-700">
-                                      <FileText className="h-4 w-4 text-gray-500" />
+                                    <span className="flex items-center gap-2 text-foreground">
+                                      <FileText className="h-4 w-4 text-muted-foreground" />
                                       {lesson.title}
                                     </span>
                                   </AccordionTrigger>
@@ -503,10 +503,10 @@ export default function DashboardPage() {
                                                 `/learn/${courseId}?assignmentId=${assignment.id}&lessonId=${lessonId}`
                                               )
                                             }
-                                            className="w-full flex items-center justify-between gap-2 rounded-lg border p-3 text-left hover:bg-gray-50 transition-colors"
+                                            className="w-full flex items-center justify-between gap-2 rounded-lg border p-3 text-left hover:bg-muted transition-colors"
                                           >
-                                            <span className="flex items-center gap-2 text-sm font-medium text-gray-800 truncate">
-                                              <ClipboardListIcon className="h-4 w-4 shrink-0 text-gray-500" />
+                                            <span className="flex items-center gap-2 text-sm font-medium text-foreground truncate">
+                                              <ClipboardListIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
                                               <span className="truncate">{assignment.title}</span>
                                             </span>
                                             <Badge className={`shrink-0 ${dueDateBadgeClass[status]}`}>
@@ -529,7 +529,7 @@ export default function DashboardPage() {
                     )}
                   </Accordion>
                 ) : (
-                  <p className="text-gray-500">
+                  <p className="text-muted-foreground">
                     No assignments yet. Enjoy your free time!
                   </p>
                 )}
@@ -562,15 +562,15 @@ export default function DashboardPage() {
                           <AccordionTrigger className="hover:no-underline">
                             <div className="flex items-center justify-between w-full">
                               <div className="flex items-center">
-                                <BookOpenIcon className="h-5 w-5 mr-2 text-gray-600" />
-                                <span className="font-medium text-gray-800">{course.title}</span>
+                                <BookOpenIcon className="h-5 w-5 mr-2 text-muted-foreground" />
+                                <span className="font-medium text-foreground">{course.title}</span>
                               </div>
                               <Badge
                                 variant="outline"
                                 className={
                                   course.progress_percent === 100
-                                    ? "ml-2 bg-green-100 text-green-800 hover:bg-green-200"
-                                    : "ml-2 bg-gray-100 text-gray-800 hover:bg-gray-200"
+                                    ? "ml-2 bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/40"
+                                    : "ml-2 bg-muted text-muted-foreground hover:bg-muted/70"
                                 }
                               >
                                 {course.progress_percent}% Complete
@@ -586,8 +586,8 @@ export default function DashboardPage() {
                                   className="border-b-0"
                                 >
                                   <AccordionTrigger className="hover:no-underline py-2 text-sm">
-                                    <span className="flex items-center gap-2 text-gray-700">
-                                      <FileText className="h-4 w-4 text-gray-500" />
+                                    <span className="flex items-center gap-2 text-foreground">
+                                      <FileText className="h-4 w-4 text-muted-foreground" />
                                       {lesson.title}
                                     </span>
                                   </AccordionTrigger>
@@ -614,7 +614,7 @@ export default function DashboardPage() {
                                               >
                                                 <div className="flex items-center justify-between w-full">
                                                   <div className="flex items-center">
-                                                    <FileQuestion className="h-4 w-4 mr-2 text-gray-500" />
+                                                    <FileQuestion className="h-4 w-4 mr-2 text-muted-foreground" />
                                                     <span className="text-sm truncate">{quiz.title}</span>
                                                   </div>
                                                   <div className="flex items-center space-x-2">
@@ -626,7 +626,7 @@ export default function DashboardPage() {
                                                         : "Lesson Incomplete"}
                                                     </Badge>
                                                     {!quiz.lesson_completed && (
-                                                      <Lock className="h-4 w-4 text-gray-400" />
+                                                      <Lock className="h-4 w-4 text-muted-foreground/60" />
                                                     )}
                                                   </div>
                                                 </div>
@@ -655,7 +655,7 @@ export default function DashboardPage() {
                     )}
                   </Accordion>
                 ) : (
-                  <p className="text-gray-500">
+                  <p className="text-muted-foreground">
                     No quizzes available at the moment.
                   </p>
                 )}

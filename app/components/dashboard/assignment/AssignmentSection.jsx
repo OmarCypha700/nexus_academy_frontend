@@ -54,7 +54,7 @@ export default function AssignmentList({ courseId, openAssignmentModal }) {
     lessons.find((l) => l.id === lessonId)?.title || "Unassigned";
 
   if (loading) return <div>Loading assignments...</div>;
-  if (error) return <div className="text-red-500">{error}</div>;
+  if (error) return <div className="text-destructive">{error}</div>;
 
   return (
     <div className="space-y-4">

@@ -81,7 +81,7 @@ export default function QuestionList({ quizId, quizTitle, openQuestionModal }) {
       )}
 
       {success && (
-        <Alert className="mb-2 bg-green-50 border-green-200 text-green-800">
+        <Alert className="mb-2 bg-green-50 border-green-200 text-green-800 dark:bg-green-950/30 dark:border-green-900 dark:text-green-400">
           <AlertDescription>{success}</AlertDescription>
         </Alert>
       )}
@@ -109,7 +109,7 @@ export default function QuestionList({ quizId, quizTitle, openQuestionModal }) {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="text-red-500 hover:text-red-600"
+                    className="text-destructive hover:text-destructive"
                     onClick={() => handleDeleteQuestion(question.id)}
                   >
                     <Trash2 size={16} />

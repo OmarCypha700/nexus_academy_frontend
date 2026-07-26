@@ -90,7 +90,7 @@ export default function ProfilePage() {
             <>
               <div className="flex items-center space-x-4 mb-6">
                 <Avatar className="w-16 h-16">
-                  <AvatarFallback className="bg-black text-white text-xl font-bold">
+                  <AvatarFallback className="bg-primary text-primary-foreground text-xl font-bold">
                     {initials.toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
@@ -98,7 +98,7 @@ export default function ProfilePage() {
                   <h2 className="text-xl font-semibold">
                     {profile.first_name} {profile.last_name}
                   </h2>
-                  <p className="text-gray-500">{profile.email}</p>
+                  <p className="text-muted-foreground">{profile.email}</p>
                 </div>
               </div>
 
@@ -179,7 +179,7 @@ export default function ProfilePage() {
                 ) : (
                   <Button
                     onClick={() => setEditing(true)}
-                    className="mt-4 bg-black hover:bg-blue-700"
+                    className="mt-4"
                   >
                     Edit Profile
                   </Button>

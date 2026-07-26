@@ -61,14 +61,14 @@ export function CourseSidebar({
           top-0 left-0
           w-[85vw] sm:w-72 md:w-64 lg:w-80 
           h-full md:h-[calc(100vh-64px)] 
-          bg-white border-r border-gray-200 
+          bg-background border-r border-border
           flex-shrink-0 overflow-auto
           z-50 md:z-auto
           transition-transform duration-300 ease-in-out
           ${sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
         `}
       >
-        <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-white z-10">
+        <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-background z-10">
           <h2 className="font-bold text-base lg:text-lg truncate pr-2">
             {course?.title || "Untitled Course"}
           </h2>
@@ -85,11 +85,11 @@ export function CourseSidebar({
 
         <div className="p-4 border-b">
           <div className="flex items-center space-x-2">
-            <p className="text-xs lg:text-sm text-gray-600">Your progress:</p>
+            <p className="text-xs lg:text-sm text-muted-foreground">Your progress:</p>
             <Progress value={progress || 0} className="h-2 flex-grow" />
-            <span className="text-sm text-gray-500">{Math.round(progress || 0)}%</span>
+            <span className="text-sm text-muted-foreground">{Math.round(progress || 0)}%</span>
           </div>
-          <p className="mt-2 text-sm text-gray-600">
+          <p className="mt-2 text-sm text-muted-foreground">
             {completedCount || 0} of {totalLessons || 0} lessons completed
           </p>
         </div>
@@ -108,9 +108,9 @@ export function CourseSidebar({
                   value={module.id.toString()}
                   className="border-none"
                 >
-                  <AccordionTrigger className="px-3 py-2 text-sm hover:bg-gray-50">
+                  <AccordionTrigger className="px-3 py-2 text-sm hover:bg-muted">
                     <div className="flex items-center w-full">
-                      <BookMarked className="h-4 w-4 mr-2 flex-shrink-0 text-gray-500" />
+                      <BookMarked className="h-4 w-4 mr-2 flex-shrink-0 text-muted-foreground" />
                       <span className="truncate font-medium">{module.title}</span>
                     </div>
                   </AccordionTrigger>
@@ -137,7 +137,7 @@ export function CourseSidebar({
                                     {safeCompletedLessons.includes(lesson.id) ? (
                                       <CheckCircle className="h-4 w-4 mr-2 text-green-500 flex-shrink-0" />
                                     ) : (
-                                      <PlayCircle className="h-4 w-4 mr-2 text-gray-500 flex-shrink-0" />
+                                      <PlayCircle className="h-4 w-4 mr-2 text-muted-foreground flex-shrink-0" />
                                     )}
                                     <span className="truncate">{lesson.title}</span>
                                   </div>
@@ -166,11 +166,11 @@ export function CourseSidebar({
                                   >
                                     <div className="flex items-center justify-between w-full">
                                       <div className="flex items-center">
-                                        <FileQuestion className="h-4 w-4 mr-2 text-gray-500 flex-shrink-0" />
+                                        <FileQuestion className="h-4 w-4 mr-2 text-muted-foreground flex-shrink-0" />
                                         <span className="truncate">{quiz.title}</span>
                                       </div>
                                       {!safeCompletedLessons.includes(lesson.id) && (
-                                        <Lock className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                                        <Lock className="h-4 w-4 text-muted-foreground/60 flex-shrink-0" />
                                       )}
                                     </div>
                                   </Button>
@@ -205,11 +205,11 @@ export function CourseSidebar({
                                   >
                                     <div className="flex items-center justify-between w-full">
                                       <div className="flex items-center">
-                                        <FileText className="h-4 w-4 mr-2 text-gray-500 flex-shrink-0" />
+                                        <FileText className="h-4 w-4 mr-2 text-muted-foreground flex-shrink-0" />
                                         <span className="truncate">{assignment.title}</span>
                                       </div>
                                       {!safeCompletedLessons.includes(lesson.id) && (
-                                        <Lock className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                                        <Lock className="h-4 w-4 text-muted-foreground/60 flex-shrink-0" />
                                       )}
                                     </div>
                                   </Button>
@@ -227,14 +227,14 @@ export function CourseSidebar({
                         </div>
                       ))
                     ) : (
-                      <p className="text-sm text-gray-500 pl-4">No lessons available</p>
+                      <p className="text-sm text-muted-foreground pl-4">No lessons available</p>
                     )}
                   </AccordionContent>
                 </AccordionItem>
               ))}
             </Accordion>
           ) : (
-            <p className="text-sm text-gray-600 p-2">No modules available</p>
+            <p className="text-sm text-muted-foreground p-2">No modules available</p>
           )}
         </div>
       </div>

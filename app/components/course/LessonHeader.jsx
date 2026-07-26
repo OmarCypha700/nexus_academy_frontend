@@ -17,7 +17,7 @@ export function LessonHeader({
   if (!lesson || !course?.modules?.length) {
     return (
       <div className="mb-6">
-        <p className="text-gray-500">No lesson selected</p>
+        <p className="text-muted-foreground">No lesson selected</p>
       </div>
     );
   }
@@ -49,12 +49,12 @@ export function LessonHeader({
         <h1 className="text-2xl font-bold">{lesson.title || "Untitled Lesson"}</h1>
         <Badge
           variant={isCompleted ? "success" : "outline"}
-          className={isCompleted ? "bg-green-100 text-green-800 hover:bg-green-200" : ""}
+          className={isCompleted ? "bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/40" : ""}
         >
           {isCompleted ? "Completed" : "In Progress"}
         </Badge>
       </div>
-      <p className="text-gray-500 mb-4">
+      <p className="text-muted-foreground mb-4">
         <span className="font-medium">{currentModule?.title || "Unknown Module"}</span> •{" "}
         {lesson.duration ? `${lesson.duration} min` : "Duration not specified"}
       </p>

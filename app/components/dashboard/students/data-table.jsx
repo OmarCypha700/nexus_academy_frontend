@@ -18,30 +18,18 @@ import {
 import { ChevronDownIcon } from "lucide-react";
 
 /**
- * H6: server-paginated data table.
- *
- * Previously this component managed its own client-side `pageSize` state, called
- * `useReactTable` with only `getCoreRowModel()`, and had no `getPaginationRowModel()` —
- * so Previous/Next didn't do anything meaningful, and (separately, on the backend) the
- * API had no DEFAULT_PAGINATION_CLASS, so a course with a large roster loaded every
- * student into the browser in a single request regardless.
- *
- * Now that the backend paginates (see settings.py DEFAULT_PAGINATION_CLASS), this
- * component is "dumb": it renders whatever page of rows its parent gives it, and asks
- * the parent to fetch a different page via `onPageChange`. The parent (e.g. StudentsList)
- * owns the actual fetch call and DRF's {count, next, previous, results} response shape.
+ * Server-paginated data table — renders whatever page of rows its parent gives it and
+ * asks for a different page via `onPageChange`. The parent owns the actual fetch call.
  *
  * Props:
- *   columns       - tanstack column defs (unchanged)
+ *   columns       - tanstack column defs
  *   data          - the CURRENT PAGE of rows only, not the full dataset
  *   pageIndex     - zero-based current page
  *   pageCount     - total number of pages (Math.ceil(count / pageSize))
  *   totalCount    - total row count across all pages (for the "Total Rows" label)
  *   onPageChange  - (newPageIndex) => void — parent fetches that page
  *   isLoading     - disables Prev/Next while a page fetch is in flight
- *   filterValue / onFilterChange - controlled search input (server-side filtering,
- *                   debounced by the parent if desired) — replaces the old decorative
- *                   filter input that had no onChange handler at all.
+ *   filterValue / onFilterChange - controlled search input (server-side filtering)
  */
 const DataTable = React.forwardRef(
   (

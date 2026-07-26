@@ -50,7 +50,7 @@ export default function StudentDetails() {
     );
   }
 
-  if (error) return <p className="text-red-500 p-6">{error}</p>;
+  if (error) return <p className="text-destructive p-6">{error}</p>;
   if (!student) return <p className="p-6">Student not found.</p>;
 
   const name = student.student.name || "Student";
@@ -70,7 +70,7 @@ export default function StudentDetails() {
       <Card>
         <CardHeader className="flex flex-row items-center gap-4">
           <Avatar className="h-14 w-14">
-            <AvatarFallback className="bg-black text-white text-lg">
+            <AvatarFallback className="bg-primary text-primary-foreground text-lg">
               {initials}
             </AvatarFallback>
           </Avatar>

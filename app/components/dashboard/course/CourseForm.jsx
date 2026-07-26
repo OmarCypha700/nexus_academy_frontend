@@ -153,7 +153,7 @@ export default function CourseForm({
         </Alert>
       )}
       {success && (
-        <Alert className="bg-green-50 border-green-200 text-green-800">
+        <Alert className="bg-green-50 border-green-200 text-green-800 dark:bg-green-950/30 dark:border-green-900 dark:text-green-400">
           <AlertDescription>{success}</AlertDescription>
         </Alert>
       )}
@@ -214,7 +214,7 @@ export default function CourseForm({
         </div>
         <ul className="mt-2 space-y-2">
           {outcomes.map((outcome, index) => (
-            <li key={index} className="flex items-center justify-between bg-gray-100 p-2 rounded">
+            <li key={index} className="flex items-center justify-between bg-muted p-2 rounded">
               <span>{outcome.text}</span>
               <Button
                 type="button"
@@ -222,7 +222,7 @@ export default function CourseForm({
                 size="sm"
                 onClick={() => handleDeleteOutcome(index)}
               >
-                <Trash2 className="h-4 w-4" color="red" />
+                <Trash2 className="h-4 w-4 text-destructive" />
               </Button>
             </li>
           ))}
@@ -243,7 +243,7 @@ export default function CourseForm({
         </div>
         <ul className="mt-2 space-y-2">
           {requirements.map((req, index) => (
-            <li key={index} className="flex items-center justify-between bg-gray-100 p-2 rounded">
+            <li key={index} className="flex items-center justify-between bg-muted p-2 rounded">
               <span>{req.text}</span>
               <Button
                 type="button"
@@ -251,7 +251,7 @@ export default function CourseForm({
                 size="sm"
                 onClick={() => handleDeleteRequirement(index)}
               >
-                <Trash2 className="h-4 w-4" color="red" />
+                <Trash2 className="h-4 w-4 text-destructive" />
               </Button>
             </li>
           ))}

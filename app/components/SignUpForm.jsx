@@ -60,7 +60,7 @@ export default function SignupForm() {
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
       {/* Left Image - visible only on md and above */}
-      <div className="hidden md:flex md:w-1/2 items-center justify-center bg-blue-100 rounded-l-lg">
+      <div className="hidden md:flex md:w-1/2 items-center justify-center bg-muted rounded-l-lg">
         <Image
           src="/next.svg"
           alt="Signin illustration"
@@ -72,14 +72,14 @@ export default function SignupForm() {
       </div>
 
       {/* Form Section */}
-      <div className="w-full md:w-1/2 flex items-center justify-center p-6 bg-white rounded-r-lg">
+      <div className="w-full md:w-1/2 flex items-center justify-center p-6 bg-card rounded-r-lg">
         <div className="w-full max-w-md space-y-6">
-          <h2 className="text-3xl font-bold text-gray-900 mb-6 text-center">
+          <h2 className="text-3xl font-bold text-foreground mb-6 text-center">
             Create Your Account
           </h2>
 
           {error && (
-            <p className="text-red-500 text-sm mb-4 text-center">{error}</p>
+            <p className="text-destructive text-sm mb-4 text-center">{error}</p>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4" noValidate>
@@ -95,7 +95,7 @@ export default function SignupForm() {
                   required
                 />
                 {fieldErrors.first_name && (
-                  <p className="text-red-500 text-xs mt-1">{fieldErrors.first_name}</p>
+                  <p className="text-destructive text-xs mt-1">{fieldErrors.first_name}</p>
                 )}
               </div>
 
@@ -110,7 +110,7 @@ export default function SignupForm() {
                   required
                 />
                 {fieldErrors.last_name && (
-                  <p className="text-red-500 text-xs mt-1">{fieldErrors.last_name}</p>
+                  <p className="text-destructive text-xs mt-1">{fieldErrors.last_name}</p>
                 )}
               </div>
             </div>
@@ -127,7 +127,7 @@ export default function SignupForm() {
                   required
                 />
                 {fieldErrors.username && (
-                  <p className="text-red-500 text-xs mt-1">{fieldErrors.username}</p>
+                  <p className="text-destructive text-xs mt-1">{fieldErrors.username}</p>
                 )}
               </div>
 
@@ -142,7 +142,7 @@ export default function SignupForm() {
                   required
                 />
                 {fieldErrors.email && (
-                  <p className="text-red-500 text-xs mt-1">{fieldErrors.email}</p>
+                  <p className="text-destructive text-xs mt-1">{fieldErrors.email}</p>
                 )}
               </div>
             </div>
@@ -158,7 +158,7 @@ export default function SignupForm() {
                 required
               />
               {fieldErrors.password && (
-                <p className="text-red-500 text-xs mt-1">{fieldErrors.password}</p>
+                <p className="text-destructive text-xs mt-1">{fieldErrors.password}</p>
               )}
             </div>
 
@@ -203,9 +203,9 @@ export default function SignupForm() {
             </Button>
           </div>
 
-          <p className="mt-4 text-center text-sm text-gray-600">
+          <p className="mt-4 text-center text-sm text-muted-foreground">
             Already have an account?{" "}
-            <Link href="/login" className="text-blue-600 hover:underline">
+            <Link href="/login" className="text-primary hover:underline">
               Log in
             </Link>
           </p>

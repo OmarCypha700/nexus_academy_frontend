@@ -233,7 +233,7 @@ export default function QuizSection({ lessonId, courseId, onQuizUpdate }) {
         </Alert>
       )}
       {success && (
-        <Alert className="bg-green-50 border-green-200 text-green-800">
+        <Alert className="bg-green-50 border-green-200 text-green-800 dark:bg-green-950/30 dark:border-green-900 dark:text-green-400">
           <AlertDescription>{success}</AlertDescription>
         </Alert>
       )}
@@ -374,10 +374,10 @@ export default function QuizSection({ lessonId, courseId, onQuizUpdate }) {
                                 <div
                                   ref={provided.innerRef}
                                   {...provided.draggableProps}
-                                  className="flex items-center gap-2 p-2 border rounded hover:bg-gray-50"
+                                  className="flex items-center gap-2 p-2 border rounded hover:bg-muted"
                                 >
                                   <div {...provided.dragHandleProps}>
-                                    <GripVertical size={16} className="text-gray-400" />
+                                    <GripVertical size={16} className="text-muted-foreground" />
                                   </div>
                                   <div className="flex-1">
                                     <p className="text-sm">{question.text}</p>

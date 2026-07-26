@@ -1,27 +1,37 @@
-import { Book, Video, Users, CreditCard } from "lucide-react";
+import { Video, Users, CreditCard } from "lucide-react";
+import Section from "@/app/components/landing/Section";
+import Reveal from "@/app/components/landing/Reveal";
 
 const features = [
-  { icon: <Video className="w-6 h-6" />, title: "Video-Based Learning", desc: "HD video lessons from top educators." },
-  // { icon: <Book className="w-6 h-6" />, title: "Downloadable Notes", desc: "Access detailed notes anywhere." },
-  { icon: <Users className="w-6 h-6" />, title: "Expert Instructors", desc: "Top professionals and teachers." },
-  { icon: <CreditCard className="w-6 h-6" />, title: "Affordable Plans", desc: "Flexible pricing for students." },
+  { icon: Video, title: "Video-Based Learning", desc: "HD video lessons from top educators, available on demand." },
+  { icon: Users, title: "Expert Instructors", desc: "Learn from vetted professionals and experienced teachers." },
+  { icon: CreditCard, title: "Affordable Plans", desc: "Flexible pricing built around student budgets." },
 ];
 
 export default function Features() {
   return (
-    <section className="w-full py-14 bg-gray-100 px-4">
-      <div className="max-w-6xl mx-auto text-center">
-        <h2 className="text-2xl sm:text-3xl font-semibold mb-10">Why Choose Nexus Academy?</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-          {features.map((f, i) => (
-            <div key={i} className="bg-white rounded-2xl shadow p-5 sm:p-6">
-              <div className="text-black mb-3">{f.icon}</div>
-              <h3 className="font-semibold text-lg">{f.title}</h3>
-              <p className="text-gray-600 text-sm mt-2">{f.desc}</p>
-            </div>
-          ))}
-        </div>
+    <Section>
+      <Reveal as="div" className="text-center mb-14">
+        <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
+          Why choose Nexus Academy?
+        </h2>
+      </Reveal>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+        {features.map((f, i) => {
+          const Icon = f.icon;
+          return (
+            <Reveal key={f.title} delay={i * 100}>
+              <div className="h-full rounded-2xl border border-border bg-card p-6 transition-colors hover:border-primary/40">
+                <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                  <Icon className="w-5 h-5" />
+                </div>
+                <h3 className="font-semibold text-lg text-foreground">{f.title}</h3>
+                <p className="text-muted-foreground text-sm mt-2">{f.desc}</p>
+              </div>
+            </Reveal>
+          );
+        })}
       </div>
-    </section>
+    </Section>
   );
 }

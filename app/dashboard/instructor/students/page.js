@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { PieChart, Pie, Cell } from "recharts";
+import { Download, FileText, FileSpreadsheet, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import StudentsList from "@/app/components/dashboard/students/StudentsList";
 import { Button } from "@/app/components/ui/button";
 import {
@@ -17,6 +19,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/app/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/app/components/ui/dropdown-menu";
 import {
   ChartContainer,
   ChartTooltip,
@@ -40,18 +48,15 @@ export default function InstructorDashboardStudents() {
   const [error, setError] = useState(null);
   const [progressData, setProgressData] = useState(null);
   const [progressLoading, setProgressLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     const fetchCourses = async () => {
       setLoading(true);
       setError(null);
       try {
-        // H6: /instructor/courses/ is a ListCreateAPIView, so it's also affected by the
-        // global DEFAULT_PAGINATION_CLASS — response.data is now {count, next, previous,
-        // results}, not a bare array. An instructor's own course list realistically stays
-        // well under one page (20) for most users, but rather than assume that and risk
-        // silently hiding courses for a prolific instructor, this follows `next` until
-        // every page is collected — same approach as the public catalog page.
+        // This endpoint is paginated, so follow `next` until every page is collected
+        // rather than silently truncating a prolific instructor's course list.
         let allCourses = [];
         let url = "/instructor/courses/";
         while (url) {
@@ -102,6 +107,39 @@ export default function InstructorDashboardStudents() {
     fetchProgress();
   }, [selectedCourseId]);
 
+  const handleExport = async (exportFormat) => {
+    if (!selectedCourseId) return;
+    setExporting(true);
+    try {
+      const response = await axiosInstance.get(
+        `/instructor/courses/${selectedCourseId}/students/export/`,
+        {
+          params: { export_format: exportFormat },
+          responseType: "blob",
+        }
+      );
+
+      const disposition = response.headers["content-disposition"] || "";
+      const match = disposition.match(/filename="?([^"]+)"?/);
+      const filename = match ? match[1] : `students.${exportFormat}`;
+
+      const url = window.URL.createObjectURL(response.data);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success(`Downloaded ${filename}`);
+    } catch (err) {
+      console.error("Error exporting students:", err);
+      toast.error("Failed to export students. Please try again.");
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const chartData = progressData
     ? [
         { status: "completed", count: progressData.completed, fill: chartConfig.completed.color },
@@ -112,13 +150,13 @@ export default function InstructorDashboardStudents() {
   const hasProgressActivity = chartData.some((d) => d.count > 0);
 
   if (error) {
-    return <p className="text-red-500 text-center py-12">{error}</p>;
+    return <p className="text-destructive text-center py-12">{error}</p>;
   }
 
   return (
     <div className="space-y-6 p-4 md:p-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Students</h1>
+        <h1 className="text-2xl font-bold text-foreground">Students</h1>
         <p className="text-sm text-muted-foreground">
           Review your roster and each course&apos;s completion progress.
         </p>
@@ -144,9 +182,26 @@ export default function InstructorDashboardStudents() {
               </SelectContent>
             </Select>
           )}
-          <Button onClick={() => alert("Export CSV functionality to be implemented")}>
-            Export CSV
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button disabled={!selectedCourseId || exporting} className="gap-2">
+                {exporting ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Download className="h-4 w-4" />
+                )}
+                Export
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => handleExport("csv")} disabled={exporting}>
+                <FileText className="h-4 w-4 mr-2" /> Export as CSV
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport("xlsx")} disabled={exporting}>
+                <FileSpreadsheet className="h-4 w-4 mr-2" /> Export as Excel (.xlsx)
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </CardContent>
       </Card>
 
@@ -162,7 +217,7 @@ export default function InstructorDashboardStudents() {
 
           <Card className="border shadow-none max-w-md">
             <CardHeader className="pb-0">
-              <CardTitle className="text-sm font-medium text-gray-700">
+              <CardTitle className="text-sm font-medium text-foreground">
                 Course Progress
               </CardTitle>
             </CardHeader>

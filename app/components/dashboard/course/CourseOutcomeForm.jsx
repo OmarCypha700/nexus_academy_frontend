@@ -59,9 +59,7 @@ export default function CourseOutcomeDialog({
       course: courseId,
       outcomes,
     };
-    console.log(payload)
     onSubmit(payload);
-    // onOpenChange(false);
   };
 
   return (
@@ -78,7 +76,7 @@ export default function CourseOutcomeDialog({
             </Alert>
           )}
           {success && (
-            <Alert className="bg-green-50 border-green-200 text-green-800">
+            <Alert className="bg-green-50 border-green-200 text-green-800 dark:bg-green-950/30 dark:border-green-900 dark:text-green-400">
               <AlertDescription>{success}</AlertDescription>
             </Alert>
           )}

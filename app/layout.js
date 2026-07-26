@@ -1,30 +1,10 @@
-// import "./globals.css";
-// import Navbar from "./components/Navbar";
-// import Footer from "./components/Footer";
-// import { AuthProvider } from "./context/AuthContext";
-
-// export default function RootLayout({ children }) {
-//   return (
-//     <html lang="en">
-//       <body className="flex flex-col min-h-screen">
-//         <AuthProvider>
-//           <Navbar />
-//           <main className="bg-gray-100 flex-1 p-6">{children}</main>
-//           <Footer />
-//         </AuthProvider>
-//       </body>
-//     </html>
-//   );
-// }
-
-
-
 import { headers } from "next/headers";
 import "./globals.css";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import ServiceWorkerRegister from "./components/ServiceWorkerRegister";
 import { AuthProvider } from "./context/AuthContext";
+import { ThemeProvider } from "next-themes";
 
 export const metadata = {
   title: "Nexus Academy",
@@ -47,21 +27,21 @@ export const viewport = {
 };
 
 export default async function RootLayout({ children }) {
-  // H9: available in case a custom inline <script nonce={nonce}> is ever added directly
-  // in this layout — Next.js's own injected scripts pick up the nonce automatically from
-  // the CSP header set in middleware.js, so this isn't required for the app to work today,
-  // but it's the documented pattern and costs nothing to have in place now.
+  // Available for a future inline <script nonce={nonce}>; Next's own injected scripts
+  // already pick up the CSP nonce from middleware.js automatically.
   const nonce = (await headers()).get("x-nonce");
 
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className="flex flex-col min-h-screen">
-        <AuthProvider>
-          <Navbar />
-          <main className="bg-gray-100 flex-1 p-6">{children}</main>
-          <Footer />
-        </AuthProvider>
-        <ServiceWorkerRegister />
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <AuthProvider>
+            <Navbar />
+            <main className="bg-background text-foreground flex-1 p-6">{children}</main>
+            <Footer />
+          </AuthProvider>
+          <ServiceWorkerRegister />
+        </ThemeProvider>
       </body>
     </html>
   );

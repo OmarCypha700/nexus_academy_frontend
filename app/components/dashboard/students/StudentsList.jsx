@@ -27,8 +27,7 @@ export default function StudentsList({ courseId }) {
       setLoading(true);
       setError(null);
       try {
-        // H6: the backend now paginates (DRF PageNumberPagination), so this fetches ONE
-        // page of students at a time instead of the entire roster in a single request.
+        // Backend paginates (DRF PageNumberPagination) — fetch one page at a time.
         const response = await axiosInstance.get(
           `/instructor/courses/${courseId}/students/`,
           { params: { page: page + 1, search: search || undefined } } // DRF pages are 1-indexed
@@ -77,7 +76,7 @@ export default function StudentsList({ courseId }) {
     };
   }, []);
 
-  if (error) return <p className="text-red-500 text-center py-12">{error}</p>;
+  if (error) return <p className="text-destructive text-center py-12">{error}</p>;
 
   if (!loading && students.length === 0 && !filterValue) {
     return (

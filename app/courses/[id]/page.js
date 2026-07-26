@@ -170,7 +170,6 @@ export default function CourseDetailPage() {
             }
           },
           onCancel: () => {
-            // setPaymentError("Payment was cancelled.");
             setEnrolling(false);
           },
           onError: (error) => {
@@ -201,7 +200,7 @@ export default function CourseDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-muted/30">
         <Skeleton className="h-96 w-full" />
         <div className="max-w-6xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -233,7 +232,7 @@ export default function CourseDetailPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-muted/30 flex items-center justify-center p-4">
         <Alert variant="destructive" className="max-w-md">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Error</AlertTitle>
@@ -245,7 +244,7 @@ export default function CourseDetailPage() {
 
   if (!course) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-muted/30 flex items-center justify-center p-4">
         <Alert variant="destructive" className="max-w-md">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Course Not Found</AlertTitle>
@@ -259,7 +258,7 @@ export default function CourseDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-muted/30">
       {/* Hero Banner */}
       <div className="relative h-96 bg-gray-900">
         {course.intro_video_id && (
@@ -337,10 +336,10 @@ export default function CourseDetailPage() {
                   <h2 className="text-2xl font-bold mb-4">About This Course</h2>
                   <div className="prose max-w-none">
                     <div
-                      className="text-gray-700"
+                      className="text-foreground"
                       dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(course.description) }}
                     />
-                    <p className="text-gray-700 mt-4">
+                    <p className="text-foreground mt-4">
                       This comprehensive course will take you through all the
                       essential concepts and give you practical, hands-on
                       experience. By the end, you&apos;ll have the skills and
@@ -371,7 +370,7 @@ export default function CourseDetailPage() {
                   <ul className="space-y-2">
                     {course.requirements?.map((requirement) => (
                       <li key={requirement.id} className="flex items-center">
-                        <div className="h-1.5 w-1.5 rounded-full bg-gray-700 mr-2"></div>
+                        <div className="h-1.5 w-1.5 rounded-full bg-muted-foreground mr-2"></div>
                         <span>{requirement.text}</span>
                       </li>
                     ))}
@@ -385,7 +384,7 @@ export default function CourseDetailPage() {
                 <div className="space-y-3">
                   {course.modules?.map((module, index) => (
                     <Card key={module.id} className="overflow-hidden">
-                      <CardHeader className="p-4 pb-2 bg-gray-50">
+                      <CardHeader className="p-4 pb-2 bg-muted">
                         <div className="flex justify-between items-center">
                           <CardTitle className="text-lg">
                             Module {index + 1}: {module.title}
@@ -399,7 +398,7 @@ export default function CourseDetailPage() {
                         {module.lessons?.map((lesson) => (
                           <div
                             key={lesson.id}
-                            className="flex items-center text-sm text-gray-500 mt-2"
+                            className="flex items-center text-sm text-muted-foreground mt-2"
                           >
                             <PlayCircle className="h-4 w-4 mr-2" />
                             <span>{lesson.title}</span>
@@ -420,7 +419,7 @@ export default function CourseDetailPage() {
                 <div className="flex items-center space-x-4 mb-4">
                   <Avatar className="h-16 w-16">
                     <AvatarImage src={null} alt="Instructor" />
-                    <AvatarFallback className="bg-primary text-white text-xl">
+                    <AvatarFallback className="bg-primary text-primary-foreground text-xl">
                       {course.instructor_details
                         ? `${course.instructor_details.first_name.charAt(
                             0,
@@ -434,14 +433,14 @@ export default function CourseDetailPage() {
                         ? `${course.instructor_details.first_name} ${course.instructor_details.last_name}`
                         : "Instructor Name"}
                     </h3>
-                    <p className="text-gray-600">
+                    <p className="text-muted-foreground">
                       {course.instructor_details?.position ||
                         "Subject Matter Expert"}
                     </p>
                   </div>
                 </div>
                 <div className="prose max-w-none">
-                  <p className="text-gray-700">
+                  <p className="text-foreground">
                     {course.instructor_details?.bio ||
                       `An experienced instructor with a passion for teaching and expertise in this field.
                       With years of practical experience and a dedicated approach to education, they
@@ -476,7 +475,7 @@ export default function CourseDetailPage() {
                 {isEnrolled && (
                   <Badge
                     variant="outline"
-                    className="bg-green-100 text-green-800 mb-2"
+                    className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 mb-2"
                   >
                     Already Enrolled
                   </Badge>
@@ -525,7 +524,7 @@ export default function CourseDetailPage() {
                       ? "Continue Learning"
                       : "Enroll Now"}
                 </Button>
-                <p className="text-xs text-center text-gray-500">
+                <p className="text-xs text-center text-muted-foreground">
                   30-day money-back guarantee, no questions asked
                 </p>
               </CardContent>

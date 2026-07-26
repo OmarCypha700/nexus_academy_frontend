@@ -359,7 +359,7 @@ export default function CourseLearnPage({ courseId }) {
         <h2 className="text-xl sm:text-2xl font-bold">
           Welcome to {courseData?.title}
         </h2>
-        <p className="text-gray-600 mt-2 text-sm sm:text-base">
+        <p className="text-muted-foreground mt-2 text-sm sm:text-base">
           {courseData?.description || "No description available"}
         </p>
       </div>
@@ -397,7 +397,7 @@ export default function CourseLearnPage({ courseId }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-muted/30">
         <div className="container mx-auto px-2 sm:px-4 lg:px-6 py-2 sm:py-4 max-w-7xl">
           <div className="space-y-4 px-2">
             <Skeleton className="h-8 w-3/4 mb-2" />
@@ -414,7 +414,7 @@ export default function CourseLearnPage({ courseId }) {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-muted/30">
         <div className="container mx-auto px-2 sm:px-4 lg:px-6 py-2 sm:py-4 max-w-7xl">
           <Alert variant="destructive" className="mx-2 mb-6">
             <AlertTitle>Error loading course</AlertTitle>
@@ -427,10 +427,10 @@ export default function CourseLearnPage({ courseId }) {
 
   if (!courseData) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-muted/30">
         <div className="container mx-auto px-2 sm:px-4 lg:px-6 py-2 sm:py-4 max-w-7xl">
           <div className="text-center py-20">
-            <p className="text-gray-500">No course data available</p>
+            <p className="text-muted-foreground">No course data available</p>
           </div>
         </div>
       </div>
@@ -442,7 +442,7 @@ export default function CourseLearnPage({ courseId }) {
     courseData.modules.some((m) => m.lessons?.length > 0);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-muted/30">
       <div className="container mx-auto px-2 sm:px-4 lg:px-6 py-2 sm:py-4 max-w-7xl">
         <div className="flex items-center justify-between mb-2 sm:mb-4">
           <Button asChild variant="ghost" size="sm">
@@ -491,7 +491,7 @@ export default function CourseLearnPage({ courseId }) {
             <div
               className={`md:${
                 isDesktopSidebarVisible ? "block" : "hidden"
-              } w-full md:w-64 lg:w-80 flex-shrink-0 transition-all duration-300 fixed md:sticky top-0 left-0 h-full md:h-[calc(100vh-64px)] bg-white border-r border-gray-200 z-50 md:z-auto ${
+              } w-full md:w-64 lg:w-80 flex-shrink-0 transition-all duration-300 fixed md:sticky top-0 left-0 h-full md:h-[calc(100vh-64px)] bg-background border-r border-border z-50 md:z-auto ${
                 sidebarOpen
                   ? "translate-x-0"
                   : "-translate-x-full md:translate-x-0"
@@ -549,7 +549,7 @@ export default function CourseLearnPage({ courseId }) {
                     />
                     {currentLesson.resources?.length > 0 && (
                       <>
-                        <Separator className="my-4 bg-gray-200" />
+                        <Separator className="my-4 bg-border" />
                         <AdditionalResources
                           resources={currentLesson.resources}
                         />

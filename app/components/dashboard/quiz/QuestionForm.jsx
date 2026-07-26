@@ -61,7 +61,7 @@ export default function QuestionForm({ quizId, question, onSubmit, onCancel }) {
   };
 
   return (
-    <div className="h-[80vh] overflow-y-auto rounded-xl shadow-md border p-6 bg-white">
+    <div className="h-[80vh] overflow-y-auto rounded-xl shadow-md border p-6 bg-card">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <Label htmlFor="text">Question Text</Label>

@@ -2,16 +2,16 @@ import { Button } from "@/app/components/ui/button";
 import { Textarea } from "@/app/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/app/components/ui/avatar";
 
-export function DiscussionPanel({ 
-  comments, // Changed from discussionComments
-  commentText, // Changed from discussionComment
-  setCommentText, // Changed from setDiscussionComment
-  onSubmitComment, // Changed from submitComment
-  isSubmitting // Changed from submittingComment
+export function DiscussionPanel({
+  comments,
+  commentText,
+  setCommentText,
+  onSubmitComment,
+  isSubmitting,
 }) {
   return (
     <div className="space-y-6">
-      <div className="p-4 bg-gray-50 rounded-lg">
+      <div className="p-4 bg-muted rounded-lg">
         <h3 className="font-medium mb-2">Add to the Discussion</h3>
         <Textarea
           placeholder="Share your thoughts, questions, or insights..."
@@ -41,7 +41,7 @@ export function DiscussionPanel({
                 <div className="flex-1">
                   <div className="flex justify-between items-center mb-1">
                     <span className="font-medium">{comment.user.name}</span>
-                    <span className="text-xs text-gray-500">{comment.timestamp}</span>
+                    <span className="text-xs text-muted-foreground">{comment.timestamp}</span>
                   </div>
                   <p className="text-sm">{comment.content}</p>
                 </div>
@@ -49,7 +49,7 @@ export function DiscussionPanel({
             </div>
           ))
         ) : (
-          <p className="text-sm text-gray-500">No comments yet. Be the first to start the discussion!</p>
+          <p className="text-sm text-muted-foreground">No comments yet. Be the first to start the discussion!</p>
         )}
       </div>
     </div>

@@ -55,7 +55,7 @@ const VideoLesson = ({ content }) => {
             />
           </div>
         ) : (
-          <p className="text-gray-500">No content available for this section.</p>
+          <p className="text-muted-foreground">No content available for this section.</p>
         )}
       </CardContent>
     </Card>
@@ -145,8 +145,8 @@ const QuizQuestion = ({ question, answer, onChange, disabled }) => {
 
   if (normalizedChoices.length === 0) {
     return (
-      <div className="border p-4 rounded-md mb-4 bg-red-50">
-        <p className="font-medium mb-3 text-red-600">Error: No choices available for this question.</p>
+      <div className="border p-4 rounded-md mb-4 bg-destructive/10">
+        <p className="font-medium mb-3 text-destructive">Error: No choices available for this question.</p>
         <p>{question.text}</p>
       </div>
     );
@@ -162,7 +162,7 @@ const QuizQuestion = ({ question, answer, onChange, disabled }) => {
           return (
             <label
               key={`${question.id}-${optionLabel}`}
-              className="flex items-center p-2 rounded-md hover:bg-gray-50 cursor-pointer"
+              className="flex items-center p-2 rounded-md hover:bg-muted cursor-pointer"
             >
               <input
                 type={isMultiple ? "checkbox" : "radio"}
@@ -200,19 +200,19 @@ const QuizResults = ({ results, onRetake }) => {
         Object.values(results.detailed_results).map((result) => (
           <div
             key={result.question}
-            className={`border p-4 rounded-md ${result.is_correct ? "border-green-200 bg-green-50" : "border-red-200 bg-red-50"}`}
+            className={`border p-4 rounded-md ${result.is_correct ? "border-green-200 bg-green-50" : "border-accent bg-accent/10"}`}
           >
             <p className="font-medium mb-2">{result.question}</p>
-            <p className={`${result.is_correct ? "text-green-600" : "text-red-600"} mb-1`}>
+            <p className={`${result.is_correct ? "text-green-600" : "text-accent-foreground font-semibold"} mb-1`}>
               Your answer: {Array.isArray(result.your_answer) ? result.your_answer.join(", ") : result.your_answer}
             </p>
             {!result.is_correct && (
-              <p className="text-gray-700">
+              <p className="text-foreground">
                 Correct answer: {Array.isArray(result.correct_answer) ? result.correct_answer.join(", ") : result.correct_answer}
               </p>
             )}
             {result.explanation && (
-              <p className="text-sm mt-2 text-gray-600">{result.explanation}</p>
+              <p className="text-sm mt-2 text-muted-foreground">{result.explanation}</p>
             )}
           </div>
         ))}
@@ -327,14 +327,11 @@ export function LessonContent({ lesson, selectedQuiz, selectedAssignment, onQuiz
     setQuizResults(null);
   };
 
-  // Debugging props
-  console.log("LessonContent Props:", { lesson, selectedQuiz, selectedAssignment });
-
   if (loading) {
     return (
       <Card className="mb-6">
         <CardContent className="p-6 flex justify-center items-center h-64">
-          <div className="text-center text-gray-500">
+          <div className="text-center text-muted-foreground">
             <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
             <p>Loading content...</p>
           </div>
@@ -357,7 +354,7 @@ export function LessonContent({ lesson, selectedQuiz, selectedAssignment, onQuiz
                 __html: DOMPurify.sanitize(quizData.description || "No description available"),
               }}
             />
-            <div className="text-xs text-gray-500">
+            <div className="text-xs text-muted-foreground">
               Passing Score: {quizData.passing_score || "N/A"}% | Attempts Remaining: {quizData.attempts_remaining ?? "Unknown"}
               {quizData.time_limit && ` | Time Limit: ${quizData.time_limit} min`}
             </div>
@@ -406,7 +403,7 @@ export function LessonContent({ lesson, selectedQuiz, selectedAssignment, onQuiz
     return (
       <Card className="mb-6">
         <CardContent className="p-6 flex justify-center items-center h-64">
-          <div className="text-center text-gray-500">
+          <div className="text-center text-muted-foreground">
             <p>Quiz data not available. Please try again.</p>
           </div>
         </CardContent>
@@ -432,7 +429,7 @@ export function LessonContent({ lesson, selectedQuiz, selectedAssignment, onQuiz
             <VideoLesson key={idx} content={content} />
           ))
         ) : (
-          <p className="text-gray-500">No lesson content available.</p>
+          <p className="text-muted-foreground">No lesson content available.</p>
         )}
       </div>
     );
@@ -441,7 +438,7 @@ export function LessonContent({ lesson, selectedQuiz, selectedAssignment, onQuiz
   return (
     <Card className="mb-6">
       <CardContent className="p-6 flex justify-center items-center h-64">
-        <div className="text-center text-gray-500">
+        <div className="text-center text-muted-foreground">
           <p>No content available.</p>
         </div>
       </CardContent>

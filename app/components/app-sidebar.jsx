@@ -12,6 +12,7 @@ import {
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -24,6 +25,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/app/components/ui/tooltip";
+import ThemeToggle from "@/app/components/ThemeToggle";
 
 export function AppSidebar() {
   // Menu items.
@@ -51,7 +53,6 @@ export function AppSidebar() {
     <Sidebar collapsible="icon" variant="floating" className={"sticky"}>
       <SidebarContent>
         <SidebarGroup>
-          {/* <SidebarGroupLabel className={'font-bold text-black'}>Instructor Dashboard</SidebarGroupLabel> */}
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => (
@@ -83,6 +84,18 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <div className="flex items-center justify-between px-2 py-1 group-data-[collapsible=icon]:justify-center">
+              <span className="text-sm text-muted-foreground group-data-[collapsible=icon]:hidden">
+                Theme
+              </span>
+              <ThemeToggle />
+            </div>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
     </Sidebar>
   );
 }

@@ -6,6 +6,7 @@ import { useAuth } from "../context/AuthContext";
 import { useState, useEffect } from "react";
 import { GraduationCap, Menu, X } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
+import ThemeToggle from "@/app/components/ThemeToggle";
 import clsx from "clsx";
 
 export default function Navbar() {
@@ -42,16 +43,16 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="sticky top-0 left-0 right-0 z-50 backdrop-blur bg-white/70 shadow-sm transition-all">
-        <div className="max-w-7xl mx-auto flex justify-between items-center px-4 py-3">
+      <nav className="sticky top-3 z-50 mx-3 md:mx-6 lg:mx-auto lg:max-w-6xl backdrop-blur bg-background/80 md:border md:border-border md:shadow-lg md:rounded-full transition-all">
+        <div className="flex justify-between items-center px-4 py-2 gap-6">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2">
-            <GraduationCap className="w-6 h-6 text-black" />
-            <span className="text-xl font-bold text-gray-900">Nexus Academy</span>
+          <Link href="/" className="flex items-center">
+            <GraduationCap className="w-6 h-6 text-primary" />
+            <span className="text-xl font-bold text-foreground">Nexus Academy</span>
           </Link>
 
           {/* Desktop Menu */}
-          <div className="hidden md:flex items-center gap-6">
+          <div className="hidden md:flex items-center gap-4">
             {navLinks.map((link) => (
               <Link
                 key={link.path}
@@ -59,13 +60,15 @@ export default function Navbar() {
                 className={clsx(
                   "text-sm font-medium transition px-3 py-1 rounded-full",
                   isActive(link.path)
-                    ? "bg-black text-white"
-                    : "text-gray-800 hover:bg-blue-100"
+                    ? "bg-primary text-primary-foreground"
+                    : "text-foreground/70 hover:bg-muted hover:text-foreground"
                 )}
               >
                 {link.name}
               </Link>
             ))}
+
+            <ThemeToggle />
 
             {!isAuthenticated ? (
               <>
@@ -81,7 +84,7 @@ export default function Navbar() {
             ) : (
               <>
                 <Link href="/profile">
-                  <div className="w-9 h-9 flex items-center justify-center rounded-full bg-black text-white font-semibold">
+                  <div className="w-9 h-9 flex items-center justify-center rounded-full bg-primary text-primary-foreground font-semibold">
                     {initials}
                   </div>
                 </Link>
@@ -93,8 +96,8 @@ export default function Navbar() {
           </div>
 
           {/* Mobile menu button */}
-          <div className="md:hidden">
-            <button onClick={toggleMenu} className="text-gray-800 focus:outline-none">
+          <div className="md:hidden float-right ml-auto">
+            <button onClick={toggleMenu} className="text-foreground focus:outline-none">
               {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
           </div>
@@ -104,15 +107,15 @@ export default function Navbar() {
       {/* Slide-in Mobile Menu */}
       <div
         className={clsx(
-          "fixed top-0 right-0 h-full w-64 bg-white z-40 transform transition-transform duration-300 shadow-lg md:hidden",
+          "fixed top-0 right-0 h-full w-64 bg-background border-l border-border z-40 transform transition-transform duration-300 shadow-lg md:hidden",
           isMenuOpen ? "translate-x-0" : "translate-x-full"
         )}
       >
         <div className="p-4 flex flex-col h-full">
           <div className="flex justify-between items-center mb-6">
-            <span className="text-xl font-bold text-gray-900">Menu</span>
+            <span className="text-xl font-bold text-foreground">Menu</span>
             <button onClick={toggleMenu}>
-              <X className="w-6 h-6 text-gray-700" />
+              <X className="w-6 h-6 text-muted-foreground" />
             </button>
           </div>
 
@@ -125,8 +128,8 @@ export default function Navbar() {
                 className={clsx(
                   "text-base px-4 py-2 rounded transition",
                   isActive(link.path)
-                    ? "bg-black text-white"
-                    : "text-gray-800 hover:bg-blue-100"
+                    ? "bg-primary text-primary-foreground"
+                    : "text-foreground/70 hover:bg-muted hover:text-foreground"
                 )}
               >
                 {link.name}
@@ -134,7 +137,11 @@ export default function Navbar() {
             ))}
           </nav>
 
-          <div className="mt-auto pt-6 border-t">
+          <div className="mt-auto pt-6 border-t border-border">
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-sm font-medium text-muted-foreground">Theme</span>
+              <ThemeToggle />
+            </div>
             {!isAuthenticated ? (
               <div className="space-y-2">
                 <Link href="/login" onClick={() => setIsMenuOpen(false)}>
@@ -149,7 +156,7 @@ export default function Navbar() {
             ) : (
               <div className="flex items-center justify-between">
                 <Link href="/profile" onClick={() => setIsMenuOpen(false)}>
-                  <div className="w-10 h-10 flex items-center justify-center rounded-full bg-blue-500 text-white font-bold">
+                  <div className="w-10 h-10 flex items-center justify-center rounded-full bg-primary text-primary-foreground font-bold">
                     {initials}
                   </div>
                 </Link>

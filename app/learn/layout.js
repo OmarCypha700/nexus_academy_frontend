@@ -1,9 +1,7 @@
-// app/learn/layout.jsx
 "use client";
 
 import { Suspense } from "react";
 import { Skeleton } from "@/app/components/ui/skeleton";
-// import { Toaster } from "@/app/components/ui/Sonner"
 
 export default function LearnLayout({ children }) {
   return (
