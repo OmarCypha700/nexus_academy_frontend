@@ -52,14 +52,14 @@ export default function Hero() {
               Browse Courses
               <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
             </Button>
-            {/* <Button
+            <Button
               variant="outline"
               size="lg"
               className="w-full sm:w-auto"
               onClick={() => router.push("/signup/instructor")}
             >
               Become an Instructor
-            </Button> */}
+            </Button>
           </div>
         </Reveal>
       </div>
